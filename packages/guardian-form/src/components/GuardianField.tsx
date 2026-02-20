@@ -53,7 +53,10 @@ export function GuardianField({
     const field = {
         name,
         value: values[name] || '',
-        onChange: (val: any) => setFieldValue(name, val),
+        onChange: (e: any) => {
+            const value = e && typeof e === 'object' && 'target' in e ? e.target.value : e;
+            setFieldValue(name, value);
+        },
         onBlur: () => { }, // Can be extended to track blur
     };
 

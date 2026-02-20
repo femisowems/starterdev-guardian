@@ -31,7 +31,7 @@ export const BasicSecureForm: Story = {
             onSubmit={(v) => alert(JSON.stringify(v))}
         >
             <div style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <GuardianField name="email" label="Email" classification={DataClassification.PERSONAL}>
+                <GuardianField name="email" label="Email" classification={DataClassification.PERSONAL} encryptionRequired>
                     {({ field }) => <input {...field} className="gf-input" />}
                 </GuardianField>
 
