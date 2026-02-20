@@ -1,0 +1,15 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@starterdev/guardian-form": [
+                "../../packages/guardian-form/src/index.ts"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*",
+        ".storybook/**/*"
+    ]
+}

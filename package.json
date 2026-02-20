@@ -1,0 +1,17 @@
+{
+    "name": "starterdev-guardian-root",
+    "private": true,
+    "workspaces": [
+        "packages/*",
+        "apps/*"
+    ],
+    "devDependencies": {
+        "vite": "^5.0.0"
+    },
+    "scripts": {
+        "build": "npm run build --workspace=@starterdev/guardian-form",
+        "test": "npm run test --workspace=@starterdev/guardian-form",
+        "lint": "npm run lint --workspace=@starterdev/guardian-form",
+        "storybook": "npm run storybook --workspace=storybook-app"
+    }
+}

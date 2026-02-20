@@ -1,0 +1,125 @@
+:root {
+  --gf-primary: #1a1a1a;
+  --gf-secondary: #4a5568;
+  --gf-accent: #3182ce;
+  --gf-success: #38a169;
+  --gf-warning: #d69e2e;
+  --gf-danger: #e53e3e;
+  --gf-bg: #ffffff;
+  --gf-border: #e2e8f0;
+  --gf-text: #2d3748;
+  --gf-radius: 8px;
+  --gf-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --gf-font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.gf-container {
+  font-family: var(--gf-font);
+  color: var(--gf-text);
+}
+
+/* Masked Input Styling */
+.gf-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.gf-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--gf-border);
+  border-radius: var(--gf-radius);
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--gf-bg);
+}
+
+.gf-input:focus {
+  outline: none;
+  border-color: var(--gf-accent);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.gf-input-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gf-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Risk Meter */
+.gf-risk-meter {
+  margin: 20px 0;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: var(--gf-radius);
+  border: 1px solid var(--gf-border);
+}
+
+.gf-risk-bar-bg {
+  height: 8px;
+  background: #edf2f7;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.gf-risk-bar-fill {
+  height: 100%;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+}
+
+/* Compliance Summary */
+.gf-compliance-card {
+  padding: 16px;
+  background: #ffffff;
+  border-radius: var(--gf-radius);
+  border: 1px solid var(--gf-border);
+  box-shadow: var(--gf-shadow);
+}
+
+.gf-compliance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.gf-status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* PII Badge */
+.gf-pii-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* Classification Colors */
+.gf-level-PUBLIC { background: #E2E8F0; color: #4A5568; }
+.gf-level-INTERNAL { background: #BEE3F8; color: #2C5282; }
+.gf-level-PERSONAL { background: #FEFCBF; color: #744210; }
+.gf-level-FINANCIAL { background: #C6F6D5; color: #22543D; }
+.gf-level-HIGHLY_SENSITIVE { background: #FED7D7; color: #822727; }
+
+.gf-risk-LOW { background-color: var(--gf-success); }
+.gf-risk-MEDIUM { background-color: var(--gf-warning); }
+.gf-risk-HIGH { background-color: var(--gf-danger); }
