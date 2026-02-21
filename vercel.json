@@ -1,6 +1,6 @@
 {
-    "buildCommand": "npm run build --workspace=@starterdev/guardian-form && npm run build-storybook --workspace=storybook-app",
-    "outputDirectory": "apps/storybook/storybook-static",
+    "buildCommand": "npm run build --workspace=@starterdev/guardian-form && npx storybook build --config-dir apps/storybook/.storybook --output-dir storybook-static",
+    "outputDirectory": "storybook-static",
     "installCommand": "npm install --legacy-peer-deps",
     "framework": null
 }
