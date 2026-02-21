@@ -1,0 +1,6 @@
+{
+    "buildCommand": "npm run build-storybook --workspace=storybook-app",
+    "outputDirectory": "apps/storybook/storybook-static",
+    "installCommand": "npm install --legacy-peer-deps",
+    "framework": null
+}
