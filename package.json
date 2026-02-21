@@ -10,6 +10,7 @@
     },
     "scripts": {
         "build": "npm run build --workspace=@starterdev/guardian-form",
+        "build-all": "npm run build --workspace=@starterdev/guardian-form && npm run build-storybook --workspace=storybook-app && mv apps/storybook/storybook-static ./storybook-static",
         "test": "npm run test --workspace=@starterdev/guardian-form",
         "lint": "npm run lint --workspace=@starterdev/guardian-form",
         "storybook": "npm run storybook --workspace=storybook-app"
