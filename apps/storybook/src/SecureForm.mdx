@@ -1,0 +1,54 @@
+import { Meta, Story, Canvas, Controls } from '@storybook/blocks';
+import * as SecureFormStories from './GuardianForm.stories';
+
+<Meta of={SecureFormStories} />
+
+# Secure Forms
+
+The core of `@starterdev/guardian-form`: a headless-first approach to building high-compliance, regulated form interfaces.
+
+## Overview
+
+Secure Forms are designed for environments where data sensitivity is paramount. They provide automated data classification, structural masking, and built-in governance policies out of the box.
+
+## Core Security Features
+
+### 1. Data Classification
+Every field in a Guardian Form is assigned a `DataClassification`. This metadata is used by the policy engine to enforce security rules at runtime.
+
+- **PUBLIC**: Non-sensitive data.
+- **INTERNAL**: Propriertary but not personally identifiable.
+- **PERSONAL**: PII (Personally Identifiable Information).
+- **FINANCIAL**: Payment or banking details.
+- **HIGHLY_SENSITIVE**: SSNs, SINs, or biometrics.
+
+### 2. Structural Masking
+Protect sensitive data in the UI without losing context. Our structural masking preserves formatting (like dashes or spaces) while hiding the actual values.
+
+```tsx
+<GuardianField name="ssn" label="Social Security Number" classification={DataClassification.HIGHLY_SENSITIVE} masked>
+    {({ field }) => <MaskedInput {...field} pattern={Patterns.SSN} placeholder="000-00-0000" />}
+</GuardianField>
+```
+
+### 3. Policy-Aware Validation
+Validation is not just about format; it's about policy. Built-in policies include:
+- `NoPlaintextPii`: Ensures PII is always masked in the UI.
+- `RequireEncryption`: Enforces encryption for sensitive classifications.
+- `MaskHighlySensitive`: Automatically masks fields classified as HIGHLY_SENSITIVE.
+
+## Examples
+
+### Basic Secure Form
+A standard implementation showing PII classification and field-level security.
+
+<Canvas of={SecureFormStories.BasicSecureForm} />
+
+### High Risk Form
+Demonstrates enterprise-grade security for highly sensitive data like Social Insurance Numbers.
+
+<Canvas of={SecureFormStories.HighRiskForm} />
+
+## Properties & Configuration
+
+<Controls />

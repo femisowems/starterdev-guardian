@@ -1,0 +1,71 @@
+import { Meta, Story, Canvas, Controls } from '@storybook/blocks';
+import * as EverydayFormsStories from './EverydayForms.stories';
+
+<Meta of={EverydayFormsStories} />
+
+# Everyday Forms
+
+Broadening the scope of `@starterdev/guardian-form` to include common, everyday form scenarios while maintaining core governance and security benefits.
+
+## Overview
+
+Traditional high-security forms often prioritize compliance over user experience. "Everyday Forms" bridge this gap by providing user-friendly patterns and hints for common data collection tasks like registration, contact forms, and profile updates.
+
+## Key Features
+
+### 1. Pattern Matching
+We provide pre-defined, secure patterns for common fields. These patterns include automatic formatting and structural masking.
+
+| Pattern | Value Example | Masked Display (Blurred) |
+|---------|---------------|--------------------------|
+| `Patterns.PHONE` | `(123) 456-7890` | `(***) ***-****` |
+| `Patterns.ZIP` | `12345` | `*****` |
+| `Patterns.POSTAL_CODE` | `K1A 0B1` | `*** ***` |
+
+```tsx
+<GuardianField name="phone" label="Phone Number" classification={DataClassification.PERSONAL} masked>
+    {({ field }) => (
+        <MaskedInput {...field} pattern={Patterns.PHONE} placeholder="(000) 000-0000" />
+    )}
+</GuardianField>
+```
+
+### 2. Privacy Hints
+Transparency is key to user trust. Use the `PrivacyHint` component to explain *why* specific data is being collected.
+
+```tsx
+<GuardianField name="email" label="Email Address" classification={DataClassification.PERSONAL}>
+    {({ field }) => (
+        <>
+            <input {...field} className="gf-input" placeholder="jane@example.com" />
+            <PrivacyHint classification={DataClassification.PERSONAL} message="Used to secure your account and send updates." />
+        </>
+    )}
+</GuardianField>
+```
+
+### 3. Data Minimization Policy
+Automated enforcement of the principle of least privilege. The `DataMinimizationPolicy` warns developers if a form collects an excessive number of PII fields.
+
+```tsx
+<GuardianFormProvider
+    policies={[DataMinimizationPolicy(3)]} // Limit to 3 PII fields
+    ...
+>
+```
+
+## Registration Examples
+
+### US Registration
+Demonstrates `PHONE`, native date picker for `DOB`, and `ZIP` patterns.
+
+<Canvas of={EverydayFormsStories.ModernRegistration} />
+
+### Canadian Registration
+Demonstrates the `POSTAL_CODE` pattern for regional compliance.
+
+<Canvas of={EverydayFormsStories.CanadianRegistration} />
+
+## Properties & Configuration
+
+<Controls />

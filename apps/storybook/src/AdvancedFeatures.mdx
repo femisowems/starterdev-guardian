@@ -1,0 +1,64 @@
+import { Meta, Story, Canvas, Controls } from '@storybook/blocks';
+import * as AdvancedFeaturesStories from './AdvancedFeatures.stories';
+
+<Meta of={AdvancedFeaturesStories} />
+
+# Advanced Governance Features
+
+Take control of complex form logic with Zod integration, cross-field policies, and async validation.
+
+## Overview
+
+The "Advanced Features" set demonstrates the full power of the Guardian Form library. From rigid schema validation to dynamic risk scoring, these tools allow you to build sophisticated enterprise forms with ease.
+
+## Key Capabilities
+
+### 1. Zod Integration
+Seamlessly integrate with your existing schema-based validation. The `zodAdapter` translates Zod errors into a format the `GuardianFormProvider` understands.
+
+```tsx
+const schema = z.object({
+  email: z.string().email(),
+  ssn: z.string().length(9),
+});
+
+<GuardianFormProvider
+  validate={zodAdapter(schema)}
+  ...
+>
+```
+
+### 2. Risk Meter & Real-time Scoring
+Instantly visualize the compliance risk of your form. The `RiskMeter` component calculates a score based on the types of data being collected and any policy violations.
+
+### 3. Cross-field Policies
+Implement complex business logic where the validity of one field depends on another.
+- **Example**: Requiring an "Authorized Approver" if a "Social Security Number" is provided.
+
+```tsx
+export const DependentFieldPolicy = (field: string, requiredBy: string): PolicyRule => ({
+  id: 'dependent-field',
+  evaluate: (val, _, allVals) => {
+    if (allVals[requiredBy] && !val) {
+      return { ruleId: 'dependent-field', message: `${field} is required when ${requiredBy} is provided`, severity: 'ERROR' };
+    }
+    return null;
+  }
+});
+```
+
+## Examples
+
+### Enterprise Governance
+A comprehensive demo featuring Zod validation, the Risk Meter, and cross-field dependency logic.
+
+<Canvas of={AdvancedFeaturesStories.EnterpriseGovernance} />
+
+### Async Validation
+Demonstrates library support for asynchronous server-side checks (e.g., checking username availability) with built-in loading states.
+
+<Canvas of={AdvancedFeaturesStories.AsyncValidationDemo} />
+
+## Properties & Configuration
+
+<Controls />

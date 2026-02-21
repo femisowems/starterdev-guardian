@@ -17,7 +17,6 @@ import '../../../packages/guardian-form/src/guardian-form.css';
 const meta: Meta<typeof GuardianFormProvider> = {
     title: 'GuardianForm/SecureForm',
     component: GuardianFormProvider,
-    tags: ['autodocs'],
 };
 
 export default meta;
