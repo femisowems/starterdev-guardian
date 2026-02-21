@@ -1,5 +1,8 @@
-import { Meta, Story, Canvas, Controls } from '@storybook/blocks';
+import { Meta, Canvas, Controls } from '@storybook/blocks';
 import * as EverydayFormsStories from './EverydayForms.stories';
+import { PatternTable, PATTERN_ROWS } from './components/PatternTable';
+import '../../../packages/guardian-form/src/guardian-form.css';
+import './tailwind.css';
 
 <Meta of={EverydayFormsStories} />
 
@@ -14,13 +17,25 @@ Traditional high-security forms often prioritize compliance over user experience
 ## Key Features
 
 ### 1. Pattern Matching
-We provide pre-defined, secure patterns for common fields. These patterns include automatic formatting and structural masking.
+Patterns automatically format input and apply **structural masking on blur** — separators like `-` and spaces are preserved while digits are hidden.
 
-| Pattern | Value Example | Masked Display (Blurred) |
-|---------|---------------|--------------------------|
-| `Patterns.PHONE` | `(123) 456-7890` | `(***) ***-****` |
-| `Patterns.ZIP` | `12345` | `*****` |
-| `Patterns.POSTAL_CODE` | `K1A 0B1` | `*** ***` |
+> `#` matches a digit · `A` matches a letter (auto-uppercased) · Other characters are used as separators
+
+**Everyday Patterns**
+
+<PatternTable
+  rows={PATTERN_ROWS.filter(r => ['Patterns.PHONE', 'Patterns.ZIP', 'Patterns.POSTAL_CODE', 'Patterns.DOB'].includes(r.pattern))}
+  title="Everyday Patterns"
+  description="Common patterns for registration and contact forms."
+/>
+
+**Sensitive / Identity Patterns**
+
+<PatternTable
+  rows={PATTERN_ROWS.filter(r => ['Patterns.SSN', 'Patterns.SIN', 'Patterns.CREDIT_CARD'].includes(r.pattern))}
+  title="Sensitive / Identity Patterns"
+  description="For financial and identity data — always combine with HIGHLY_SENSITIVE classification and encryption."
+/>
 
 ```tsx
 <GuardianField name="phone" label="Phone Number" classification={DataClassification.PERSONAL} masked>

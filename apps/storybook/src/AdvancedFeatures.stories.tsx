@@ -6,18 +6,19 @@ import {
     GuardianField,
     MaskedInput,
     RiskMeter,
-    ComplianceSummary,
     DataClassification,
     NoPlaintextPiiPolicy,
     MaskHighlySensitivePolicy,
     DependentFieldPolicy,
-    useEncryptedPersistence,
-    useGuardianContext,
     Patterns,
-    ValidationIndicator
+    ValidationIndicator,
 } from '@starterdev/guardian-form';
 import { zodAdapter } from '@starterdev/guardian-form/adapters';
 import '../../../packages/guardian-form/src/guardian-form.css';
+import './tailwind.css';
+import { GuardianFieldLayout } from './components/GuardianFieldLayout';
+import { FormLayout } from './components/FormLayout';
+import { ComplianceData } from './components/ComplianceSummaryPanel';
 
 const meta: Meta<typeof GuardianFormProvider> = {
     title: 'GuardianForm/AdvancedFeatures',
@@ -27,17 +28,98 @@ const meta: Meta<typeof GuardianFormProvider> = {
 export default meta;
 type Story = StoryObj<typeof GuardianFormProvider>;
 
+// ─── Zod schema ───────────────────────────────────────────────────────────────
+
 const schema = z.object({
     email: z.string().email('Invalid email format'),
-    ssn: z.string().min(9, 'SSN (Social Security Number) must be at least 9 digits'),
-    sin: z.string().min(9, 'SIN (Social Insurance Number) must be at least 9 digits'),
+    ssn: z.string().min(9, 'SSN must be at least 9 digits'),
+    sin: z.string().min(9, 'SIN must be at least 9 digits'),
     approver: z.string().optional(),
 });
 
-const AdvancedForm = () => {
-    // Note: In real usage, you'd get values/setValues from the provider context
-    // This is a simplified demo of the persistence hook
-    return (
+// ─── Compliance data ──────────────────────────────────────────────────────────
+
+const enterpriseCompliance: ComplianceData = {
+    totalFields: 4,
+    piiFields: 3,
+    encryptedFields: 3,
+    violations: [],
+    retentionPolicy: '7 years (regulatory)',
+    auditLogging: true,
+    riskScore: 55,
+};
+
+const asyncCompliance: ComplianceData = {
+    totalFields: 1,
+    piiFields: 0,
+    encryptedFields: 0,
+    violations: [],
+    retentionPolicy: 'Session only',
+    auditLogging: false,
+    riskScore: 5,
+};
+
+// ─── EnterpriseGovernance ─────────────────────────────────────────────────────
+
+const EnterpriseFormContent = () => (
+    <FormLayout
+        title="Enterprise Governance Form"
+        description="Zod schema validation · Cross-field dependency policy · Identity data handling"
+        complianceData={enterpriseCompliance}
+        submitLabel="Submit Secure Record"
+    >
+        <GuardianFieldLayout
+            label="Work Email"
+            name="email"
+            classification={DataClassification.PERSONAL}
+            complianceNote="Used for audit trail notifications and compliance reporting."
+        >
+            <GuardianField name="email" label="" classification={DataClassification.PERSONAL} encryptionRequired>
+                {({ field }) => <input {...field} className="gf-input" placeholder="person@company.com" />}
+            </GuardianField>
+        </GuardianFieldLayout>
+
+        <GuardianFieldLayout
+            label="SSN (Social Security Number)"
+            name="ssn"
+            classification={DataClassification.HIGHLY_SENSITIVE}
+            complianceNote="Required for W-9 compliance. Encrypted in transit and at rest."
+        >
+            <GuardianField name="ssn" label="" classification={DataClassification.HIGHLY_SENSITIVE} masked encryptionRequired>
+                {({ field }) => <MaskedInput {...field} pattern={Patterns.SSN} placeholder="000-00-0000" />}
+            </GuardianField>
+        </GuardianFieldLayout>
+
+        <GuardianFieldLayout
+            label="SIN (Social Insurance Number)"
+            name="sin"
+            classification={DataClassification.HIGHLY_SENSITIVE}
+            complianceNote="Required for T4 reporting. Stored in compliance vault."
+        >
+            <GuardianField name="sin" label="" classification={DataClassification.HIGHLY_SENSITIVE} masked encryptionRequired>
+                {({ field }) => <MaskedInput {...field} pattern={Patterns.SIN} placeholder="000-000-000" />}
+            </GuardianField>
+        </GuardianFieldLayout>
+
+        <GuardianFieldLayout
+            label="Authorized Approver"
+            name="approver"
+            classification={DataClassification.INTERNAL}
+            complianceNote="Required when an SSN is provided — enforced by cross-field policy."
+        >
+            <GuardianField name="approver" label="" classification={DataClassification.INTERNAL}>
+                {({ field }) => <input {...field} className="gf-input" placeholder="e.g. jane.smith@corp.com" />}
+            </GuardianField>
+        </GuardianFieldLayout>
+
+        <div className="pt-2">
+            <RiskMeter />
+        </div>
+    </FormLayout>
+);
+
+export const EnterpriseGovernance: Story = {
+    render: () => (
         <GuardianFormProvider
             initialValues={{ email: '', ssn: '', sin: '', approver: '' }}
             validate={zodAdapter(schema)}
@@ -47,78 +129,18 @@ const AdvancedForm = () => {
                     'ssn',
                     (val) => !!val,
                     'approver',
-                    'An Approver is required when SSN (Social Security Number) is provided.'
+                    'An Approver is required when SSN is provided.'
                 )
             ]}
-            userContext={{ userId: 'enterprise-user-001' }}
-            onSubmit={(v) => alert(JSON.stringify(v))}
+            userContext={{ userId: 'enterprise-user-001', role: 'compliance-officer' }}
+            onSubmit={(v) => alert(JSON.stringify(v, null, 2))}
         >
-            <FormContent />
+            <EnterpriseFormContent />
         </GuardianFormProvider>
-    );
+    ),
 };
 
-const FormContent = () => {
-    // This component is needed to access context within the provider
-    // for hooks like useEncryptedPersistence (if we wanted to use it here)
-    return (
-        <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-            minHeight: '100vh',
-            padding: '40px',
-            backgroundColor: '#f9fafb'
-        }}>
-            <div style={{
-                display: 'flex',
-                gap: '60px',
-                alignItems: 'flex-start',
-                backgroundColor: 'white',
-                padding: '40px',
-                borderRadius: '12px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-            }}>
-                <div style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <h3>Advanced Governance Form</h3>
-                    <p style={{ fontSize: '12px', color: '#666', marginBottom: '16px' }}>
-                        Features: Zod Validation, Cross-field Policy (SSN to Approver), and persistence.
-                    </p>
-
-                    <GuardianField name="email" label="Email" classification={DataClassification.PERSONAL} encryptionRequired>
-                        {({ field }) => <input {...field} className="gf-input" placeholder="person@company.com" />}
-                    </GuardianField>
-
-                    <GuardianField name="ssn" label="SSN (Social Security Number)" classification={DataClassification.HIGHLY_SENSITIVE} masked encryptionRequired>
-                        {({ field }) => <MaskedInput {...field} pattern={Patterns.SSN} placeholder="000-00-0000" />}
-                    </GuardianField>
-
-                    <GuardianField name="sin" label="SIN (Social Insurance Number)" classification={DataClassification.HIGHLY_SENSITIVE} masked encryptionRequired>
-                        {({ field }) => <MaskedInput {...field} pattern={Patterns.SIN} placeholder="000-000-000" />}
-                    </GuardianField>
-
-                    <GuardianField name="approver" label="Authorized Approver" classification={DataClassification.INTERNAL}>
-                        {({ field }) => <input {...field} className="gf-input" placeholder="Required if SSN provided" />}
-                    </GuardianField>
-
-                    <RiskMeter />
-
-                    <button type="submit" style={{ padding: '10px', background: '#2c5282', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '10px' }}>
-                        Submit Secure Record
-                    </button>
-                </div>
-
-                <div style={{ width: '320px', marginTop: '64px' }}>
-                    <ComplianceSummary />
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export const EnterpriseGovernance: Story = {
-    render: () => <AdvancedForm />,
-};
+// ─── AsyncValidationDemo ──────────────────────────────────────────────────────
 
 export const AsyncValidationDemo: Story = {
     render: () => (
@@ -127,45 +149,34 @@ export const AsyncValidationDemo: Story = {
             validate={async (v): Promise<Record<string, string>> => {
                 await new Promise(r => setTimeout(r, 1500)); // Simulate API call
                 if (v.username === 'admin') {
-                    return { username: 'Username already taken' };
+                    return { username: 'Username "admin" is already taken.' };
                 }
                 return {};
             }}
             userContext={{ userId: 'user-001' }}
-            onSubmit={(v) => alert(JSON.stringify(v))}
+            onSubmit={(v) => alert(JSON.stringify(v, null, 2))}
         >
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'flex-start',
-                minHeight: '100vh',
-                padding: '40px',
-                backgroundColor: '#f9fafb'
-            }}>
-                <div style={{
-                    display: 'flex',
-                    gap: '60px',
-                    alignItems: 'flex-start',
-                    backgroundColor: 'white',
-                    padding: '40px',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-                }}>
-                    <div style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <h2 style={{ marginBottom: '16px', fontFamily: 'Inter, sans-serif' }}>Async Governance</h2>
-                        <GuardianField name="username" label="Global ID" classification={DataClassification.PUBLIC}>
-                            {({ field }) => <input {...field} className="gf-input" placeholder="e.g. jdoe123" />}
-                        </GuardianField>
+            <FormLayout
+                title="Async Username Check"
+                description="Simulates a server-side uniqueness check with a 1.5s debounce delay."
+                complianceData={asyncCompliance}
+                submitLabel="Check Availability"
+            >
+                <GuardianFieldLayout
+                    label="Global User ID"
+                    name="username"
+                    classification={DataClassification.PUBLIC}
+                    complianceNote='Try typing "admin" to trigger a simulated server-side conflict.'
+                >
+                    <GuardianField name="username" label="" classification={DataClassification.PUBLIC}>
+                        {({ field }) => <input {...field} className="gf-input" placeholder="e.g. jdoe123" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                        <ValidationIndicator />
-                        <button type="submit" className="gf-submit-btn" style={{ marginTop: '10px' }}>Check Availability</button>
-                    </div>
-
-                    <div style={{ width: '320px', marginTop: '64px' }}>
-                        <ComplianceSummary />
-                    </div>
+                <div className="pt-2">
+                    <ValidationIndicator />
                 </div>
-            </div>
+            </FormLayout>
         </GuardianFormProvider>
-    )
+    ),
 };

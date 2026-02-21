@@ -7,11 +7,14 @@ import {
     MaskedInput,
     Patterns,
     ValidationIndicator,
-    ComplianceSummary,
     PrivacyHint,
     DataMinimizationPolicy,
 } from '@starterdev/guardian-form';
 import '../../../packages/guardian-form/src/guardian-form.css';
+import './tailwind.css';
+import { GuardianFieldLayout } from './components/GuardianFieldLayout';
+import { FormLayout } from './components/FormLayout';
+import { ComplianceData } from './components/ComplianceSummaryPanel';
 
 const meta: Meta = {
     title: 'GuardianForm/EverydayForms',
@@ -20,34 +23,29 @@ const meta: Meta = {
 export default meta;
 type Story = StoryObj;
 
-const CenteredLayout = ({ children, title }: { children: React.ReactNode, title: string }) => (
-    <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        minHeight: '100vh',
-        padding: '40px',
-        backgroundColor: '#f9fafb'
-    }}>
-        <div style={{
-            display: 'flex',
-            gap: '60px',
-            alignItems: 'flex-start',
-            backgroundColor: 'white',
-            padding: '40px',
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-        }}>
-            <div style={{ maxWidth: '400px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <h2 style={{ marginBottom: '16px', fontFamily: 'Inter, sans-serif', color: '#111827' }}>{title}</h2>
-                {children}
-            </div>
-            <div style={{ width: '320px', marginTop: '64px' }}>
-                <ComplianceSummary />
-            </div>
-        </div>
-    </div>
-);
+// ─── Compliance data ──────────────────────────────────────────────────────────
+
+const usCompliance: ComplianceData = {
+    totalFields: 5,
+    piiFields: 4,
+    encryptedFields: 0,
+    violations: [],
+    retentionPolicy: '90 days',
+    auditLogging: false,
+    riskScore: 32,
+};
+
+const caCompliance: ComplianceData = {
+    totalFields: 3,
+    piiFields: 2,
+    encryptedFields: 0,
+    violations: [],
+    retentionPolicy: '90 days',
+    auditLogging: false,
+    riskScore: 18,
+};
+
+// ─── US Registration ──────────────────────────────────────────────────────────
 
 export const ModernRegistration: Story = {
     render: () => (
@@ -55,56 +53,68 @@ export const ModernRegistration: Story = {
             initialValues={{ name: '', email: '', phone: '', dob: '', zip: '' }}
             policies={[DataMinimizationPolicy(4)]}
             userContext={{ userId: 'demo-user' }}
-            onSubmit={(v) => alert(JSON.stringify(v))}
+            onSubmit={(v) => alert(JSON.stringify(v, null, 2))}
         >
-            <CenteredLayout title="US Registration">
-                <GuardianField name="name" label="Full Name" classification={DataClassification.PUBLIC}>
-                    {({ field }) => <input {...field} className="gf-input" placeholder="Jane Doe" />}
-                </GuardianField>
+            <FormLayout
+                title="US Registration"
+                description="Standard registration form with phone masking, calendar date picker, and ZIP code formatting."
+                complianceData={usCompliance}
+                submitLabel="Sign Up"
+            >
+                <GuardianFieldLayout label="Full Name" name="name" classification={DataClassification.PUBLIC}>
+                    <GuardianField name="name" label="" classification={DataClassification.PUBLIC}>
+                        {({ field }) => <input {...field} className="gf-input" placeholder="Jane Doe" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                <GuardianField name="email" label="Email Address" classification={DataClassification.PERSONAL}>
-                    {({ field }) => (
-                        <>
-                            <input {...field} className="gf-input" placeholder="jane@example.com" />
-                            <PrivacyHint classification={DataClassification.PERSONAL} message="Used to secure your account and send updates." />
-                        </>
-                    )}
-                </GuardianField>
+                <GuardianFieldLayout
+                    label="Email Address"
+                    name="email"
+                    classification={DataClassification.PERSONAL}
+                    complianceNote="Used to secure your account and send policy updates."
+                >
+                    <GuardianField name="email" label="" classification={DataClassification.PERSONAL}>
+                        {({ field }) => (
+                            <>
+                                <input {...field} className="gf-input" placeholder="jane@example.com" />
+                                <PrivacyHint classification={DataClassification.PERSONAL} message="Used to secure your account and send updates." />
+                            </>
+                        )}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                <GuardianField name="phone" label="Phone Number" classification={DataClassification.PERSONAL} masked>
-                    {({ field }) => (
-                        <MaskedInput {...field} pattern={Patterns.PHONE} placeholder="(000) 000-0000" />
-                    )}
-                </GuardianField>
+                <GuardianFieldLayout label="Phone Number" name="phone" classification={DataClassification.PERSONAL}>
+                    <GuardianField name="phone" label="" classification={DataClassification.PERSONAL} masked>
+                        {({ field }) => <MaskedInput {...field} pattern={Patterns.PHONE} placeholder="(000) 000-0000" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                <GuardianField name="dob" label="Date of Birth" classification={DataClassification.PERSONAL}>
-                    {({ field }) => (
-                        <MaskedInput {...field} type="date" className="gf-input" />
-                    )}
-                </GuardianField>
+                <GuardianFieldLayout
+                    label="Date of Birth"
+                    name="dob"
+                    classification={DataClassification.PERSONAL}
+                    complianceNote="Used for age verification only."
+                >
+                    <GuardianField name="dob" label="" classification={DataClassification.PERSONAL}>
+                        {({ field }) => <MaskedInput {...field} type="date" className="gf-input" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                <GuardianField name="zip" label="ZIP Code" classification={DataClassification.PERSONAL}>
-                    {({ field }) => (
-                        <MaskedInput {...field} pattern={Patterns.ZIP} placeholder="00000" />
-                    )}
-                </GuardianField>
+                <GuardianFieldLayout label="ZIP Code" name="zip" classification={DataClassification.PERSONAL}>
+                    <GuardianField name="zip" label="" classification={DataClassification.PERSONAL}>
+                        {({ field }) => <MaskedInput {...field} pattern={Patterns.ZIP} placeholder="00000" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                <div style={{ marginTop: '20px' }}>
+                <div className="pt-2">
                     <ValidationIndicator />
-                    <button type="submit" className="gf-input" style={{
-                        marginTop: '12px',
-                        backgroundColor: 'var(--gf-accent)',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
-                    }}>
-                        Sign Up
-                    </button>
                 </div>
-            </CenteredLayout>
+            </FormLayout>
         </GuardianFormProvider>
     ),
 };
+
+// ─── Canadian Registration ────────────────────────────────────────────────────
 
 export const CanadianRegistration: Story = {
     render: () => (
@@ -112,36 +122,41 @@ export const CanadianRegistration: Story = {
             initialValues={{ name: '', email: '', postalCode: '' }}
             policies={[DataMinimizationPolicy(3)]}
             userContext={{ userId: 'ca-user' }}
-            onSubmit={(v) => alert(JSON.stringify(v))}
+            onSubmit={(v) => alert(JSON.stringify(v, null, 2))}
         >
-            <CenteredLayout title="Canadian Registration">
-                <GuardianField name="name" label="Full Name" classification={DataClassification.PUBLIC}>
-                    {({ field }) => <input {...field} className="gf-input" placeholder="Jean Dupont" />}
-                </GuardianField>
+            <FormLayout
+                title="Canadian Registration"
+                description="Demonstrates the A1A 1A1 postal code pattern for Canadian regional addresses."
+                complianceData={caCompliance}
+                submitLabel="Create Account"
+            >
+                <GuardianFieldLayout label="Full Name" name="name" classification={DataClassification.PUBLIC}>
+                    <GuardianField name="name" label="" classification={DataClassification.PUBLIC}>
+                        {({ field }) => <input {...field} className="gf-input" placeholder="Jean Dupont" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                <GuardianField name="email" label="Email" classification={DataClassification.PERSONAL}>
-                    {({ field }) => <input {...field} className="gf-input" placeholder="jean@example.ca" />}
-                </GuardianField>
+                <GuardianFieldLayout label="Email" name="email" classification={DataClassification.PERSONAL}>
+                    <GuardianField name="email" label="" classification={DataClassification.PERSONAL}>
+                        {({ field }) => <input {...field} className="gf-input" placeholder="jean@example.ca" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                <GuardianField name="postalCode" label="Postal Code" classification={DataClassification.PERSONAL}>
-                    {({ field }) => (
-                        <MaskedInput {...field} pattern={Patterns.POSTAL_CODE} placeholder="A1A 1A1" />
-                    )}
-                </GuardianField>
+                <GuardianFieldLayout
+                    label="Postal Code"
+                    name="postalCode"
+                    classification={DataClassification.PERSONAL}
+                    complianceNote="Format: A1A 1A1 — letters are auto-uppercased."
+                >
+                    <GuardianField name="postalCode" label="" classification={DataClassification.PERSONAL}>
+                        {({ field }) => <MaskedInput {...field} pattern={Patterns.POSTAL_CODE} placeholder="A1A 1A1" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                <div style={{ marginTop: '20px' }}>
+                <div className="pt-2">
                     <ValidationIndicator />
-                    <button type="submit" className="gf-input" style={{
-                        marginTop: '12px',
-                        backgroundColor: '#38a169',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
-                    }}>
-                        Create Account
-                    </button>
                 </div>
-            </CenteredLayout>
+            </FormLayout>
         </GuardianFormProvider>
     ),
 };

@@ -5,7 +5,6 @@ import {
     GuardianField,
     MaskedInput,
     RiskMeter,
-    ComplianceSummary,
     DataClassification,
     NoPlaintextPiiPolicy,
     RequireEncryptionPolicy,
@@ -13,6 +12,10 @@ import {
     Patterns
 } from '@starterdev/guardian-form';
 import '../../../packages/guardian-form/src/guardian-form.css';
+import './tailwind.css';
+import { GuardianFieldLayout } from './components/GuardianFieldLayout';
+import { FormLayout } from './components/FormLayout';
+import { ComplianceData } from './components/ComplianceSummaryPanel';
 
 const meta: Meta<typeof GuardianFormProvider> = {
     title: 'GuardianForm/SecureForm',
@@ -22,57 +25,85 @@ const meta: Meta<typeof GuardianFormProvider> = {
 export default meta;
 type Story = StoryObj<typeof GuardianFormProvider>;
 
+// ─── Compliance data props ────────────────────────────────────────────────────
+
+const secureCompliance: ComplianceData = {
+    totalFields: 3,
+    piiFields: 3,
+    encryptedFields: 3,
+    violations: [],
+    retentionPolicy: '30 days',
+    auditLogging: true,
+    riskScore: 42,
+};
+
+const highRiskCompliance: ComplianceData = {
+    totalFields: 3,
+    piiFields: 3,
+    encryptedFields: 0,
+    violations: [
+        { ruleId: 'require-encryption', message: 'Credit Card field (FINANCIAL) is missing encryption requirement.', severity: 'ERROR' },
+        { ruleId: 'mask-highly-sensitive', message: 'SSN field is classified HIGHLY_SENSITIVE but masking is disabled.', severity: 'WARN' },
+    ],
+    retentionPolicy: '365 days',
+    auditLogging: true,
+    riskScore: 91,
+};
+
+// ─── Stories ──────────────────────────────────────────────────────────────────
+
 export const BasicSecureForm: Story = {
     render: () => (
         <GuardianFormProvider
             initialValues={{ email: '', ssn: '', sin: '' }}
             policies={[NoPlaintextPiiPolicy]}
             userContext={{ userId: 'user-001' }}
-            onSubmit={(v) => alert(JSON.stringify(v))}
+            onSubmit={(v) => alert(JSON.stringify(v, null, 2))}
         >
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'flex-start',
-                minHeight: '100vh',
-                padding: '40px',
-                backgroundColor: '#f9fafb'
-            }}>
-                <div style={{
-                    display: 'flex',
-                    gap: '60px',
-                    alignItems: 'flex-start',
-                    backgroundColor: 'white',
-                    padding: '40px',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-                }}>
-                    <div style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <h2 style={{ marginBottom: '16px', fontFamily: 'Inter, sans-serif' }}>Secure Form</h2>
-                        <GuardianField name="email" label="Email" classification={DataClassification.PERSONAL} encryptionRequired>
-                            {({ field }) => <input {...field} className="gf-input" placeholder="email@example.com" />}
-                        </GuardianField>
+            <FormLayout
+                title="Secure Identity Form"
+                description="Field-level encryption and masking enforced by the Guardian Form policy engine."
+                complianceData={secureCompliance}
+                submitLabel="Submit Record"
+            >
+                <GuardianFieldLayout
+                    label="Email Address"
+                    name="email"
+                    classification={DataClassification.PERSONAL}
+                    complianceNote="Used for system notifications only. Never shared with third parties."
+                >
+                    <GuardianField name="email" label="" classification={DataClassification.PERSONAL} encryptionRequired>
+                        {({ field }) => <input {...field} className="gf-input" placeholder="email@example.com" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                        <GuardianField name="ssn" label="SSN (Social Security Number)" classification={DataClassification.HIGHLY_SENSITIVE} masked>
-                            {({ field }) => <MaskedInput {...field} pattern={Patterns.SSN} placeholder="000-00-0000" />}
-                        </GuardianField>
+                <GuardianFieldLayout
+                    label="SSN (Social Security Number)"
+                    name="ssn"
+                    classification={DataClassification.HIGHLY_SENSITIVE}
+                    complianceNote="AES-256 encrypted at rest. Never logged or cached in plaintext."
+                >
+                    <GuardianField name="ssn" label="" classification={DataClassification.HIGHLY_SENSITIVE} masked>
+                        {({ field }) => <MaskedInput {...field} pattern={Patterns.SSN} placeholder="000-00-0000" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                        <GuardianField name="sin" label="SIN (Social Insurance Number)" classification={DataClassification.HIGHLY_SENSITIVE} masked>
-                            {({ field }) => <MaskedInput {...field} pattern={Patterns.SIN} placeholder="000-000-000" />}
-                        </GuardianField>
+                <GuardianFieldLayout
+                    label="SIN (Social Insurance Number)"
+                    name="sin"
+                    classification={DataClassification.HIGHLY_SENSITIVE}
+                    complianceNote="Required for T4 reporting. Stored in compliance vault."
+                >
+                    <GuardianField name="sin" label="" classification={DataClassification.HIGHLY_SENSITIVE} masked>
+                        {({ field }) => <MaskedInput {...field} pattern={Patterns.SIN} placeholder="000-000-000" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                        <RiskMeter />
-
-                        <button type="submit" style={{ padding: '10px', background: '#3182ce', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '10px' }}>
-                            Submit
-                        </button>
-                    </div>
-
-                    <div style={{ width: '320px', marginTop: '64px' }}>
-                        <ComplianceSummary />
-                    </div>
+                {/* Inline risk meter below the fields */}
+                <div className="pt-2">
+                    <RiskMeter />
                 </div>
-            </div>
+            </FormLayout>
         </GuardianFormProvider>
     ),
 };
@@ -83,67 +114,56 @@ export const HighRiskForm: Story = {
             initialValues={{ cc: '', ssn: '', note: '' }}
             policies={[NoPlaintextPiiPolicy, RequireEncryptionPolicy, MaskHighlySensitivePolicy]}
             userContext={{ userId: 'user-002' }}
-            onSubmit={(v) => alert(JSON.stringify(v))}
+            onSubmit={(v) => alert(JSON.stringify(v, null, 2))}
         >
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'flex-start',
-                minHeight: '100vh',
-                padding: '40px',
-                backgroundColor: '#f9fafb'
-            }}>
-                <div style={{
-                    display: 'flex',
-                    gap: '60px',
-                    alignItems: 'flex-start',
-                    backgroundColor: 'white',
-                    padding: '40px',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-                }}>
-                    <div style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <h2 style={{ marginBottom: '16px', fontFamily: 'Inter, sans-serif' }}>High Risk Form</h2>
-                        <GuardianField
-                            name="cc"
-                            label="Credit Card"
-                            classification={DataClassification.FINANCIAL}
-                            encryptionRequired={false} // This will trigger a violation
-                        >
-                            {({ field }) => <MaskedInput {...field} pattern={Patterns.CREDIT_CARD} placeholder="0000 0000 0000 0000" />}
-                        </GuardianField>
+            <FormLayout
+                title="⚠️ High Risk Form"
+                description="Demonstrates policy violations: unencrypted financial data and unmasked sensitive fields."
+                complianceData={highRiskCompliance}
+                submitLabel="Submit (Violations Detected)"
+            >
+                <GuardianFieldLayout
+                    label="Credit Card"
+                    name="cc"
+                    classification={DataClassification.FINANCIAL}
+                    complianceNote="No encryption required — triggers a policy violation."
+                >
+                    <GuardianField name="cc" label="" classification={DataClassification.FINANCIAL} encryptionRequired={false}>
+                        {({ field }) => <MaskedInput {...field} pattern={Patterns.CREDIT_CARD} placeholder="0000 0000 0000 0000" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                        <GuardianField
-                            name="ssn"
-                            label="SSN (Social Security Number)"
-                            classification={DataClassification.HIGHLY_SENSITIVE}
-                            masked={false} // This will trigger a warning violation
-                        >
-                            {({ field }) => <MaskedInput {...field} pattern={Patterns.SSN} placeholder="000-00-0000" />}
-                        </GuardianField>
+                <GuardianFieldLayout
+                    label="SSN (Social Security Number)"
+                    name="ssn"
+                    classification={DataClassification.HIGHLY_SENSITIVE}
+                    complianceNote="Masking disabled — triggers a HIGHLY_SENSITIVE policy warning."
+                >
+                    <GuardianField name="ssn" label="" classification={DataClassification.HIGHLY_SENSITIVE} masked={false}>
+                        {({ field }) => <MaskedInput {...field} pattern={Patterns.SSN} placeholder="000-00-0000" />}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                        <GuardianField
-                            name="note"
-                            label="Internal Notes (Sensitive)"
-                            classification={DataClassification.INTERNAL}
-                        >
-                            {({ field }) => (
-                                <textarea
-                                    {...field}
-                                    className="gf-input"
-                                    placeholder="Typing a lot here will increase risk score..."
-                                />
-                            )}
-                        </GuardianField>
+                <GuardianFieldLayout
+                    label="Internal Notes"
+                    name="note"
+                    classification={DataClassification.INTERNAL}
+                >
+                    <GuardianField name="note" label="" classification={DataClassification.INTERNAL}>
+                        {({ field }) => (
+                            <textarea
+                                {...field}
+                                className="gf-input min-h-[80px] resize-none"
+                                placeholder="Typing here will increase the risk score..."
+                            />
+                        )}
+                    </GuardianField>
+                </GuardianFieldLayout>
 
-                        <RiskMeter />
-                    </div>
-
-                    <div style={{ width: '320px', marginTop: '64px' }}>
-                        <ComplianceSummary />
-                    </div>
+                <div className="pt-2">
+                    <RiskMeter />
                 </div>
-            </div>
+            </FormLayout>
         </GuardianFormProvider>
     ),
 };
