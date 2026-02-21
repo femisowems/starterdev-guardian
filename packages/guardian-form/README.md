@@ -5,6 +5,7 @@ Enterprise React + TypeScript form framework for regulated environments.
 ## Features
 
 - **Field-level Data Classification**: Governance for various sensitivity levels:
+
   | Level | Description |
   | :--- | :--- |
   | `PUBLIC` | Non-sensitive data. |
