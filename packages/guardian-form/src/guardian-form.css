@@ -18,6 +18,18 @@
   color: var(--gf-text);
 }
 
+.gf-field-wrapper {
+  margin-bottom: 20px;
+}
+
+.gf-label {
+  display: block;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: var(--gf-primary);
+}
+
 /* Masked Input Styling */
 .gf-input-container {
   position: relative;
@@ -32,6 +44,10 @@
   font-size: 14px;
   transition: border-color 0.2s, box-shadow 0.2s;
   background: var(--gf-bg);
+}
+
+.gf-input-masked {
+  -webkit-text-security: asterisk;
 }
 
 .gf-input:focus {
@@ -114,12 +130,49 @@
 }
 
 /* Classification Colors */
-.gf-level-PUBLIC { background: #E2E8F0; color: #4A5568; }
-.gf-level-INTERNAL { background: #BEE3F8; color: #2C5282; }
-.gf-level-PERSONAL { background: #FEFCBF; color: #744210; }
-.gf-level-FINANCIAL { background: #C6F6D5; color: #22543D; }
-.gf-level-HIGHLY_SENSITIVE { background: #FED7D7; color: #822727; }
+.gf-level-PUBLIC {
+  background: #E2E8F0;
+  color: #4A5568;
+}
 
-.gf-risk-LOW { background-color: var(--gf-success); }
-.gf-risk-MEDIUM { background-color: var(--gf-warning); }
-.gf-risk-HIGH { background-color: var(--gf-danger); }
+.gf-level-INTERNAL {
+  background: #BEE3F8;
+  color: #2C5282;
+}
+
+.gf-level-PERSONAL {
+  background: #FEFCBF;
+  color: #744210;
+}
+
+.gf-level-FINANCIAL {
+  background: #C6F6D5;
+  color: #22543D;
+}
+
+.gf-level-HIGHLY_SENSITIVE {
+  background: #FED7D7;
+  color: #822727;
+}
+
+.gf-risk-LOW {
+  background-color: var(--gf-success);
+}
+
+.gf-risk-MEDIUM {
+  background-color: var(--gf-warning);
+}
+
+.gf-risk-HIGH {
+  background-color: var(--gf-danger);
+}
+
+@keyframes gf-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

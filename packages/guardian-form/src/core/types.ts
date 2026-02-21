@@ -51,7 +51,12 @@ export interface RiskScore {
 export interface PolicyRule {
     id: string;
     name: string;
-    evaluate: (value: any, meta: FieldMetadata, allValues: Record<string, any>) => PolicyViolation | null;
+    evaluate: (
+        value: any,
+        meta: FieldMetadata,
+        allValues: Record<string, any>,
+        allMetadata: Record<string, FieldMetadata>
+    ) => PolicyViolation | null;
 }
 
 /**

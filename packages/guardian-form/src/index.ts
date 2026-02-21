@@ -10,6 +10,9 @@ export * from './components/RiskMeter';
 export * from './components/ComplianceSummary';
 export * from './components/PiiBadge';
 export * from './components/MaskedInput';
+export * from './components/PrivacyHint';
+export * from './components/ValidationIndicator';
 
 export * from './adapters';
 export * from './hooks';
+export * from './core/patterns';

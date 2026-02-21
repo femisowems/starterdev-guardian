@@ -67,8 +67,8 @@ export function GuardianField({
     };
 
     return (
-        <div className="gf-field-wrapper" style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>
+        <div className="gf-field-wrapper">
+            <label className="gf-label">
                 {label}
                 <PiiBadge level={classification} />
             </label>

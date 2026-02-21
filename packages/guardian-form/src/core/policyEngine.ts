@@ -6,7 +6,7 @@ import { DataClassification, FieldMetadata, PolicyRule, PolicyViolation } from '
 export const NoPlaintextPiiPolicy: PolicyRule = {
     id: 'no-plaintext-pii',
     name: 'No Plaintext PII',
-    evaluate: (value, meta, _allValues) => {
+    evaluate: (value, meta, _allValues, _allMetadata) => {
         const isPiiValue = meta.classification !== DataClassification.PUBLIC && meta.classification !== DataClassification.INTERNAL;
         if (isPiiValue && !meta.encryptionRequired && value) {
             return {
@@ -25,7 +25,7 @@ export const NoPlaintextPiiPolicy: PolicyRule = {
 export const RequireEncryptionPolicy: PolicyRule = {
     id: 'require-encryption',
     name: 'Require Encryption',
-    evaluate: (_, meta, _allValues) => {
+    evaluate: (_, meta, _allValues, _allMetadata) => {
         const needsEncryption =
             meta.classification === DataClassification.FINANCIAL ||
             meta.classification === DataClassification.HIGHLY_SENSITIVE;
@@ -47,7 +47,7 @@ export const RequireEncryptionPolicy: PolicyRule = {
 export const MaskHighlySensitivePolicy: PolicyRule = {
     id: 'mask-highly-sensitive',
     name: 'Mask Highly Sensitive',
-    evaluate: (_, meta, _allValues) => {
+    evaluate: (_, meta, _allValues, _allMetadata) => {
         if (meta.classification === DataClassification.HIGHLY_SENSITIVE && !meta.masked) {
             return {
                 ruleId: 'mask-highly-sensitive',
@@ -70,7 +70,7 @@ export const DependentFieldPolicy = (
 ): PolicyRule => ({
     id: `dependent-${targetField}-${dependentField}`,
     name: 'Dependent Field Policy',
-    evaluate: (value, meta, allValues) => {
+    evaluate: (value, meta, allValues, _allMetadata) => {
         if (meta.name === targetField && condition(value)) {
             if (!allValues[dependentField]) {
                 return {
@@ -79,6 +79,33 @@ export const DependentFieldPolicy = (
                     severity: 'BLOCK',
                 };
             }
+        }
+        return null;
+    },
+});
+
+/**
+ * Built-in policy: Warns if too many PII fields are collected (Data Minimization).
+ */
+export const DataMinimizationPolicy = (limit: number = 3): PolicyRule => ({
+    id: 'data-minimization',
+    name: 'Data Minimization',
+    evaluate: (_, meta, allValues, allMetadata) => {
+        // Trigger only on the first field to avoid duplicate warnings
+        const fields = Object.keys(allValues).sort();
+        if (meta.name !== fields[0]) return null;
+
+        const piiCount = Object.values(allMetadata).filter(m =>
+            m.classification !== DataClassification.PUBLIC &&
+            m.classification !== DataClassification.INTERNAL
+        ).length;
+
+        if (piiCount > limit) {
+            return {
+                ruleId: 'data-minimization',
+                message: `Collecting ${piiCount} PII fields. Consider reducing for data minimization (limit: ${limit}).`,
+                severity: 'WARN',
+            };
         }
         return null;
     },
@@ -105,7 +132,7 @@ export class PolicyEngine {
             if (!meta) continue;
 
             for (const rule of this.rules) {
-                const violation = rule.evaluate(value, meta, values);
+                const violation = rule.evaluate(value, meta, values, metadata);
                 if (violation) {
                     violations.push(violation);
                 }
