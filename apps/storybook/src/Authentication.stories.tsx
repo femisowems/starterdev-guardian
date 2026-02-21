@@ -238,6 +238,8 @@ export const PasswordReset: Story = {
         formDescription: 'Enter your email to receive recovery instructions.',
         submitLabel: 'Send Reset Link',
         userId: 'anonymous',
+        enableNoPlaintext: false,
+        enableRequireEncryption: true
     },
     render: (args) => (
         <GuardianFormProvider
