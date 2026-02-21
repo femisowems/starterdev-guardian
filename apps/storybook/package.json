@@ -5,7 +5,7 @@
     "scripts": {
         "storybook": "storybook dev -p 6006",
         "build-storybook": "storybook build",
-        "build-all": "npm run build --prefix ../.. && npm run build-storybook && mv storybook-static ../../storybook-static"
+        "build-all": "npm run build --prefix ../.. && rm -rf ../../storybook-static && npm run build-storybook -- -o ../../storybook-static"
     },
     "devDependencies": {
         "@starterdev/guardian-form": "*",
