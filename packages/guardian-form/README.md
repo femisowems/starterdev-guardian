@@ -4,7 +4,14 @@ Enterprise React + TypeScript form framework for regulated environments.
 
 ## Features
 
-- **Field-level Data Classification**: Governance for PUBLIC, INTERNAL, PERSONAL, FINANCIAL, and HIGHLY_SENSITIVE data.
+- **Field-level Data Classification**: Governance for various sensitivity levels:
+  | Level | Description |
+  | :--- | :--- |
+  | `PUBLIC` | Non-sensitive data. |
+  | `INTERNAL` | Proprietary but not personally identifiable. |
+  | `PERSONAL` | PII (Personally Identifiable Information). |
+  | `FINANCIAL` | Payment or banking details. |
+  | `HIGHLY_SENSITIVE` | SSNs, SINs, or biometrics. |
 - **Real-time Risk Scoring**: Instant feedback on form risk density.
 - **Compliance Policy Engine**: Enforce security rules (e.g., "No Plaintext PII", "Require Encryption").
 - **Audit Trails**: Built-in tracking of sensitive data access and modifications.

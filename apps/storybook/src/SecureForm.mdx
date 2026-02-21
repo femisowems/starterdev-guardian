@@ -16,11 +16,13 @@ Secure Forms are designed for environments where data sensitivity is paramount. 
 ### 1. Data Classification
 Every field in a Guardian Form is assigned a `DataClassification`. This metadata is used by the policy engine to enforce security rules at runtime.
 
-- **PUBLIC**: Non-sensitive data.
-- **INTERNAL**: Propriertary but not personally identifiable.
-- **PERSONAL**: PII (Personally Identifiable Information).
-- **FINANCIAL**: Payment or banking details.
-- **HIGHLY_SENSITIVE**: SSNs, SINs, or biometrics.
+| Classification | Definition |
+| :--- | :--- |
+| **PUBLIC** | Non-sensitive data. |
+| **INTERNAL** | Proprietary but not personally identifiable. |
+| **PERSONAL** | PII (Personally Identifiable Information). |
+| **FINANCIAL** | Payment or banking details. |
+| **HIGHLY_SENSITIVE** | SSNs, SINs, or biometrics. |
 
 ### 2. Structural Masking
 Protect sensitive data in the UI without losing context. Our structural masking preserves formatting (like dashes or spaces) while hiding the actual values.
