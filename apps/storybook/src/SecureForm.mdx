@@ -16,13 +16,36 @@ Secure Forms are designed for environments where data sensitivity is paramount. 
 ### 1. Data Classification
 Every field in a Guardian Form is assigned a `DataClassification`. This metadata is used by the policy engine to enforce security rules at runtime.
 
-| Classification | Definition |
-| :--- | :--- |
-| **PUBLIC** | Non-sensitive data. |
-| **INTERNAL** | Proprietary but not personally identifiable. |
-| **PERSONAL** | PII (Personally Identifiable Information). |
-| **FINANCIAL** | Payment or banking details. |
-| **HIGHLY_SENSITIVE** | SSNs, SINs, or biometrics. |
+<table className="gf-docs-table">
+  <thead>
+    <tr>
+      <th align="left">Classification</th>
+      <th align="left">Definition</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>PUBLIC</strong></td>
+      <td>Non-sensitive data.</td>
+    </tr>
+    <tr>
+      <td><strong>INTERNAL</strong></td>
+      <td>Proprietary but not personally identifiable.</td>
+    </tr>
+    <tr>
+      <td><strong>PERSONAL</strong></td>
+      <td>PII (Personally Identifiable Information).</td>
+    </tr>
+    <tr>
+      <td><strong>FINANCIAL</strong></td>
+      <td>Payment or banking details.</td>
+    </tr>
+    <tr>
+      <td><strong>HIGHLY_SENSITIVE</strong></td>
+      <td>SSNs, SINs, or biometrics.</td>
+    </tr>
+  </tbody>
+</table>
 
 ### 2. Structural Masking
 Protect sensitive data in the UI without losing context. Our structural masking preserves formatting (like dashes or spaces) while hiding the actual values.
