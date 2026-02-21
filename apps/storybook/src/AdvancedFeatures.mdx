@@ -3,7 +3,8 @@ import * as AdvancedFeaturesStories from './AdvancedFeatures.stories';
 
 <Meta of={AdvancedFeaturesStories} />
 
-# Advanced Governance Features
+# Advanced Forms
+
 
 Take control of complex form logic with Zod integration, cross-field policies, and async validation.
 
@@ -13,7 +14,36 @@ The "Advanced Features" set demonstrates the full power of the Guardian Form lib
 
 ## Key Capabilities
 
-### 1. Zod Integration
+<table className="gf-docs-table">
+  <thead>
+    <tr>
+      <th align="left">Capability</th>
+      <th align="left">Description</th>
+      <th align="left">Primary Use Case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Zod Integration</strong></td>
+      <td>Seamless integration with schema-based validation via the `zodAdapter`.</td>
+      <td>Complex validation rules and backend-aligned schemas.</td>
+    </tr>
+    <tr>
+      <td><strong>Risk Meter</strong></td>
+      <td>Real-time visualization of compliance risk based on data density and policy violations.</td>
+      <td>High-compliance forms requiring instant governance feedback.</td>
+    </tr>
+    <tr>
+      <td><strong>Cross-field Policies</strong></td>
+      <td>Support for business logic where field validity depends on other field values.</td>
+      <td>Conditional requirements (e.g., Authorized Approver if SSN is present).</td>
+    </tr>
+  </tbody>
+</table>
+
+### Technical Implementation
+
+#### Zod Integration
 Seamlessly integrate with your existing schema-based validation. The `zodAdapter` translates Zod errors into a format the `GuardianFormProvider` understands.
 
 ```tsx
@@ -28,12 +58,8 @@ const schema = z.object({
 >
 ```
 
-### 2. Risk Meter & Real-time Scoring
-Instantly visualize the compliance risk of your form. The `RiskMeter` component calculates a score based on the types of data being collected and any policy violations.
-
-### 3. Cross-field Policies
+#### Cross-field Policies
 Implement complex business logic where the validity of one field depends on another.
-- **Example**: Requiring an "Authorized Approver" if a "Social Security Number" is provided.
 
 ```tsx
 export const DependentFieldPolicy = (field: string, requiredBy: string): PolicyRule => ({
@@ -46,6 +72,7 @@ export const DependentFieldPolicy = (field: string, requiredBy: string): PolicyR
   }
 });
 ```
+
 
 ## Examples
 

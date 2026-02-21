@@ -33,4 +33,17 @@ describe('calculateRiskScore', () => {
         // 20 (PERSONAL) + 10 (Validation) = 30
         expect(risk.score).toBe(30);
     });
+
+    it('should drop score to 0 when sensitive fields are cleared', () => {
+        const metadata = {
+            ssn: { name: 'ssn', label: 'SSN', classification: DataClassification.HIGHLY_SENSITIVE },
+        };
+        const values = { ssn: '' }; // Cleared
+        const errors = {};
+
+        const risk = calculateRiskScore(values, metadata, errors);
+        expect(risk.score).toBe(0);
+        expect(risk.level).toBe('LOW');
+    });
 });
+

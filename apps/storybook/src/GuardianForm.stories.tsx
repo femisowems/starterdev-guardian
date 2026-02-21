@@ -18,7 +18,7 @@ import { FormLayout } from './components/FormLayout';
 import { ComplianceData } from './components/ComplianceSummaryPanel';
 
 const meta: Meta<typeof GuardianFormProvider> = {
-    title: 'GuardianForm/SecureForm',
+    title: 'GuardianForm/Secure Forms',
     component: GuardianFormProvider,
 };
 
@@ -63,7 +63,6 @@ export const BasicSecureForm: Story = {
             <FormLayout
                 title="Secure Identity Form"
                 description="Field-level encryption and masking enforced by the Guardian Form policy engine."
-                complianceData={secureCompliance}
                 submitLabel="Submit Record"
             >
                 <GuardianFieldLayout
@@ -119,7 +118,6 @@ export const HighRiskForm: Story = {
             <FormLayout
                 title="⚠️ High Risk Form"
                 description="Demonstrates policy violations: unencrypted financial data and unmasked sensitive fields."
-                complianceData={highRiskCompliance}
                 submitLabel="Submit (Violations Detected)"
             >
                 <GuardianFieldLayout
@@ -128,7 +126,7 @@ export const HighRiskForm: Story = {
                     classification={DataClassification.FINANCIAL}
                     complianceNote="No encryption required — triggers a policy violation."
                 >
-                    <GuardianField name="cc" label="" classification={DataClassification.FINANCIAL} encryptionRequired={false}>
+                    <GuardianField name="cc" label="Credit Card" classification={DataClassification.FINANCIAL} encryptionRequired={false}>
                         {({ field }) => <MaskedInput {...field} pattern={Patterns.CREDIT_CARD} placeholder="0000 0000 0000 0000" />}
                     </GuardianField>
                 </GuardianFieldLayout>
@@ -139,10 +137,11 @@ export const HighRiskForm: Story = {
                     classification={DataClassification.HIGHLY_SENSITIVE}
                     complianceNote="Masking disabled — triggers a HIGHLY_SENSITIVE policy warning."
                 >
-                    <GuardianField name="ssn" label="" classification={DataClassification.HIGHLY_SENSITIVE} masked={false}>
+                    <GuardianField name="ssn" label="SSN" classification={DataClassification.HIGHLY_SENSITIVE} masked={false}>
                         {({ field }) => <MaskedInput {...field} pattern={Patterns.SSN} placeholder="000-00-0000" />}
                     </GuardianField>
                 </GuardianFieldLayout>
+
 
                 <GuardianFieldLayout
                     label="Internal Notes"

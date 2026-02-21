@@ -8,6 +8,7 @@ export function calculateRiskScore(
     metadata: Record<string, FieldMetadata>,
     errors: Record<string, string>
 ): RiskScore {
+    let classificationWeight = 0;
     let piiWeight = 0;
     let validationPenalty = 0;
     let freeTextPenalty = 0;
@@ -24,27 +25,36 @@ export function calculateRiskScore(
 
     for (const [name, meta] of Object.entries(metadata)) {
         const value = values[name];
+        const hasValue = value !== undefined && value !== null && String(value).trim().length > 0;
         const hasError = !!errors[name];
 
-        // 1. Classification Weight
-        switch (meta.classification) {
-            case DataClassification.HIGHLY_SENSITIVE:
-                piiWeight += 40;
-                break;
-            case DataClassification.FINANCIAL:
-                piiWeight += 30;
-                break;
-            case DataClassification.PERSONAL:
-                piiWeight += 20;
-                break;
-            case DataClassification.INTERNAL:
-                piiWeight += 5;
-                break;
-            default:
-                piiWeight += 0;
+
+        // 1. Classification Weight & PII Tracking (Only if field has data)
+        if (hasValue) {
+            // PII is defined as PERSONAL, FINANCIAL, or HIGHLY_SENSITIVE
+            switch (meta.classification) {
+                case DataClassification.HIGHLY_SENSITIVE:
+                    classificationWeight += 40;
+                    piiWeight += 40;
+                    break;
+                case DataClassification.FINANCIAL:
+                    classificationWeight += 30;
+                    piiWeight += 30;
+                    break;
+                case DataClassification.PERSONAL:
+                    classificationWeight += 20;
+                    piiWeight += 20;
+                    break;
+                case DataClassification.INTERNAL:
+                    classificationWeight += 5;
+                    // INTERNAL is proprietary but not PII
+                    break;
+                default:
+                    classificationWeight += 0;
+            }
         }
 
-        // 2. Validation Penalty
+        // 2. Validation Penalty (Always applies if error exists)
         if (hasError) {
             validationPenalty += 10;
         }
@@ -52,6 +62,7 @@ export function calculateRiskScore(
         // 3. Free Text Penalty
         // Heuristic: If value is a long string and classification is sensitive, it's a risk.
         if (
+            hasValue &&
             typeof value === 'string' &&
             value.length > 50 &&
             meta.classification !== DataClassification.PUBLIC
@@ -60,11 +71,13 @@ export function calculateRiskScore(
         }
     }
 
+
     // Normalize score to 0-100
-    const rawScore = piiWeight + validationPenalty + freeTextPenalty;
+    const rawScore = classificationWeight + validationPenalty + freeTextPenalty;
     const score = Math.min(100, Math.max(0, rawScore));
 
     let level: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
+
     if (score >= 70) level = 'HIGH';
     else if (score > 30) level = 'MEDIUM';
 
@@ -79,3 +92,4 @@ export function calculateRiskScore(
         },
     };
 }
+

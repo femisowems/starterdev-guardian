@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useGuardianContext, DataClassification, FieldMetadata } from '@starterdev/guardian-form';
+
+
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -79,16 +82,52 @@ const InlineRiskMeter: React.FC<{ score: number }> = ({ score }) => {
 // ─── ComplianceSummaryPanel ───────────────────────────────────────────────────
 
 interface ComplianceSummaryPanelProps {
-    data: ComplianceData;
+    data?: ComplianceData;
 }
 
-export const ComplianceSummaryPanel: React.FC<ComplianceSummaryPanelProps> = ({ data }) => {
+
+export const ComplianceSummaryPanel: React.FC<ComplianceSummaryPanelProps> = ({ data: propData }) => {
+    const context = useGuardianContext<any>();
+
+    // Derive data from context if not provided via props
+    const data: ComplianceData = useMemo(() => {
+        if (propData) return propData;
+
+        const { metadata, compliance, risk } = context;
+        const metadataValues = Object.values(metadata) as FieldMetadata[];
+
+        const totalFields = Object.keys(metadata).length;
+        const piiFields = metadataValues.filter(
+            (m) => m.classification !== DataClassification.PUBLIC && m.classification !== DataClassification.INTERNAL
+        ).length;
+        const encryptedFields = metadataValues.filter((m) => m.encryptionRequired).length;
+
+        // Find a retention policy if any exists
+        const firstRetentionField = metadataValues.find(m => m.retention);
+
+        return {
+            totalFields,
+            piiFields,
+            encryptedFields,
+            violations: compliance.violations.map((v: any) => ({
+                ruleId: v.ruleId,
+                message: v.message,
+                severity: v.severity === 'BLOCK' ? 'ERROR' : 'WARN'
+            })),
+            riskScore: risk.score,
+            auditLogging: true, // Defaulting to true for demo
+            retentionPolicy: firstRetentionField?.retention || '90 days'
+        };
+    }, [propData, context]);
+
+
     const hasViolations = data.violations.length > 0;
     const overallStatus: ComplianceStatus = data.violations.some(v => v.severity === 'ERROR')
         ? 'error'
         : data.violations.some(v => v.severity === 'WARN')
             ? 'warn'
             : 'ok';
+
 
     return (
         <div className="rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden">
@@ -114,10 +153,11 @@ export const ComplianceSummaryPanel: React.FC<ComplianceSummaryPanelProps> = ({ 
                     <KVRow label="PII Fields" value={<span className={data.piiFields > 0 ? 'text-amber-600' : ''}>{data.piiFields}</span>} />
                     <KVRow label="Encrypted" value={
                         <span className="flex items-center gap-1">
-                            <StatusDot status={data.encryptedFields === data.piiFields ? 'ok' : 'warn'} />
+                            <StatusDot status={data.encryptedFields === data.piiFields && data.piiFields > 0 ? 'ok' : data.piiFields > 0 ? 'warn' : 'ok'} />
                             {data.encryptedFields}/{data.piiFields}
                         </span>
                     } />
+
                     <KVRow label="Audit Logging" value={
                         data.auditLogging
                             ? <span className="text-emerald-600">Enabled</span>
@@ -137,8 +177,8 @@ export const ComplianceSummaryPanel: React.FC<ComplianceSummaryPanelProps> = ({ 
                                 key={i}
                                 role="alert"
                                 className={`flex items-start gap-2 rounded-lg px-3 py-2 text-xs ${v.severity === 'ERROR'
-                                        ? 'bg-red-50 text-red-700 border border-red-200'
-                                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    ? 'bg-red-50 text-red-700 border border-red-200'
+                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
                                     }`}
                             >
                                 <span className="shrink-0 font-bold">{v.severity}</span>

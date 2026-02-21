@@ -4,7 +4,7 @@ import { ComplianceSummaryPanel, ComplianceData } from './ComplianceSummaryPanel
 interface FormLayoutProps {
     title: string;
     description?: string;
-    complianceData: ComplianceData;
+    complianceData?: ComplianceData;
     children: React.ReactNode;
     onSubmit?: () => void;
     submitLabel?: string;

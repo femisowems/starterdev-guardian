@@ -22,7 +22,7 @@ import { FormLayout } from './components/FormLayout';
 // ─── Meta ─────────────────────────────────────────────────────────────────────
 
 const meta: Meta = {
-    title: 'GuardianForm/Enterprise',
+    title: 'GuardianForm/Enterprise Forms',
 };
 
 export default meta;
@@ -151,7 +151,6 @@ export const EnterpriseFormDemo: Story = {
             <FormLayout
                 title="Secure Employee Record"
                 description="All fields are governed by the Guardian Form policy engine."
-                complianceData={baseCompliance}
                 submitLabel="Submit Record"
             >
                 <GuardianFieldLayout label="Full Name" name="name" classification={DataClassification.INTERNAL}>
@@ -195,7 +194,6 @@ export const HighRiskWarningState: Story = {
             <FormLayout
                 title="⚠️ High Risk Form"
                 description="This form demonstrates policy violations and high-risk governance state."
-                complianceData={highRiskCompliance}
                 submitLabel="Submit (Blocked)"
             >
                 <GuardianFieldLayout label="Full Name" name="name" classification={DataClassification.PERSONAL}>

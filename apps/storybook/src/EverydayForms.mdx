@@ -16,8 +16,37 @@ Traditional high-security forms often prioritize compliance over user experience
 
 ## Key Features
 
-### 1. Pattern Matching
-Patterns automatically format input and apply **structural masking on blur** — separators like `-` and spaces are preserved while digits are hidden.
+<table className="gf-docs-table">
+  <thead>
+    <tr>
+      <th align="left">Feature</th>
+      <th align="left">Description</th>
+      <th align="left">Impact</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Pattern Matching</strong></td>
+      <td>Automatic formatting and **structural masking on blur**.</td>
+      <td>Improved UX and shoulder-surfing protection.</td>
+    </tr>
+    <tr>
+      <td><strong>Privacy Hints</strong></td>
+      <td>Contextual explanations for data collection via `PrivacyHint`.</td>
+      <td>Increased user trust and transparency.</td>
+    </tr>
+    <tr>
+      <td><strong>Data Minimization</strong></td>
+      <td>Automated enforcement of the principle of least privilege.</td>
+      <td>Reduced compliance risk and data surface area.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Feature Details
+
+#### Pattern Matching
+Patterns automatically format input and apply structural masking on blur — separators like `-` and spaces are preserved while digits are hidden.
 
 > `#` matches a digit · `A` matches a letter (auto-uppercased) · Other characters are used as separators
 
@@ -37,6 +66,7 @@ Patterns automatically format input and apply **structural masking on blur** —
   description="For financial and identity data — always combine with HIGHLY_SENSITIVE classification and encryption."
 />
 
+
 ```tsx
 <GuardianField name="phone" label="Phone Number" classification={DataClassification.PERSONAL} masked>
     {({ field }) => (
@@ -45,7 +75,7 @@ Patterns automatically format input and apply **structural masking on blur** —
 </GuardianField>
 ```
 
-### 2. Privacy Hints
+#### Privacy Hints
 Transparency is key to user trust. Use the `PrivacyHint` component to explain *why* specific data is being collected.
 
 ```tsx
@@ -59,8 +89,8 @@ Transparency is key to user trust. Use the `PrivacyHint` component to explain *w
 </GuardianField>
 ```
 
-### 3. Data Minimization Policy
-Automated enforcement of the principle of least privilege. The `DataMinimizationPolicy` warns developers if a form collects an excessive number of PII fields.
+#### Data Minimization Policy
+The `DataMinimizationPolicy` warns developers if a form collects an excessive number of PII fields.
 
 ```tsx
 <GuardianFormProvider
@@ -68,6 +98,7 @@ Automated enforcement of the principle of least privilege. The `DataMinimization
     ...
 >
 ```
+
 
 ## Registration Examples
 

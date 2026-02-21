@@ -20,13 +20,16 @@ export interface UseGuardianFormOptions<T> {
     validate?: (values: T) => Record<string, string> | Promise<Record<string, string>>;
 }
 
+const DEFAULT_POLICIES: PolicyRule[] = [];
+
 /**
  * Headless hook for managing enterprise-grade forms with governance.
  */
 export function useGuardianForm<T extends Record<string, any>>({
     initialValues,
-    policies = [],
+    policies = DEFAULT_POLICIES,
     userContext,
+
     onAudit,
     onSubmit,
     validate,
@@ -72,16 +75,13 @@ export function useGuardianForm<T extends Record<string, any>>({
     }, []);
 
     /**
-     * Internal validation and compliance check.
+     * Pure governance evaluator (async).
      */
-    const runValidation = useCallback(async (values: T, metadata: Record<string, FieldMetadata>) => {
-        setState((prev) => ({ ...prev, isValidating: true }));
+    const evaluateGovernance = useCallback(async (values: T, metadata: Record<string, FieldMetadata>) => {
         let errors: Record<string, string> = {};
         if (validate) {
             errors = await validate(values);
         }
-        setState((prev) => ({ ...prev, isValidating: false }));
-
         const violations = policyEngine.evaluate(values, metadata);
         const risk = calculateRiskScore(values, metadata, errors);
 
@@ -93,33 +93,68 @@ export function useGuardianForm<T extends Record<string, any>>({
     }, [policyEngine, validate]);
 
     /**
+     * Internal validation and compliance check with state updates.
+     */
+    const runValidation = useCallback(async (values: T, metadata: Record<string, FieldMetadata>) => {
+        setState((prev) => ({ ...prev, isValidating: true }));
+        try {
+            const result = await evaluateGovernance(values, metadata);
+            return result;
+        } finally {
+            setState((prev) => ({ ...prev, isValidating: false }));
+        }
+    }, [evaluateGovernance]);
+
+    /**
      * Handles field value changes.
      */
     const setFieldValue = useCallback(async (name: keyof T, value: any) => {
-        const newValues = { ...state.values, [name]: value };
-        const meta = state.metadata[name as string];
+        setState((prev) => ({
+            ...prev,
+            values: { ...prev.values, [name]: value },
+            touched: { ...prev.touched, [name]: true },
+        }));
 
+        const meta = state.metadata[name as string];
         if (meta) {
             auditTrailRef.current.track(name as string, meta.classification);
             if (onAudit) {
                 onAudit(auditTrailRef.current.generateMeta('CHANGE'));
             }
         }
+    }, [state.metadata, onAudit]);
 
-        const { errors, violations, risk } = await runValidation(newValues, state.metadata);
+    /**
+     * Effect to synchronize governance metrics whenever values, metadata or policies change.
+     */
+    useEffect(() => {
+        if (Object.keys(state.metadata).length === 0) return;
 
-        setState((prev) => ({
-            ...prev,
-            values: newValues,
-            errors,
-            compliance: {
-                violations,
-                isCompliant: violations.every((v) => v.severity !== 'BLOCK'),
-            },
-            risk,
-            touched: { ...prev.touched, [name]: true },
-        }));
-    }, [state.values, state.metadata, runValidation, onAudit]);
+        let isMounted = true;
+        const syncGovernance = async () => {
+            const { errors, violations, risk } = await evaluateGovernance(state.values, state.metadata);
+            if (isMounted) {
+                setState((prev) => ({
+                    ...prev,
+                    errors,
+                    compliance: {
+                        violations,
+                        isCompliant: violations.every((v) => v.severity !== 'BLOCK'),
+                    },
+                    risk,
+                }));
+            }
+        };
+
+        syncGovernance();
+        return () => {
+            isMounted = false;
+        };
+    }, [state.values, state.metadata, evaluateGovernance]);
+
+
+
+
 
     /**
      * Handles form submission.

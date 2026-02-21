@@ -9,6 +9,12 @@ const preview: Preview = {
                 date: /Date$/i,
             },
         },
+        options: {
+            storySort: {
+                order: ['GuardianForm', ['Everyday Forms', 'Secure Forms', 'Advanced Forms', 'Enterprise Forms']],
+            },
+        },
+
     },
 };
 

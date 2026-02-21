@@ -21,7 +21,7 @@ import { FormLayout } from './components/FormLayout';
 import { ComplianceData } from './components/ComplianceSummaryPanel';
 
 const meta: Meta<typeof GuardianFormProvider> = {
-    title: 'GuardianForm/AdvancedFeatures',
+    title: 'GuardianForm/Advanced Forms',
     component: GuardianFormProvider,
 };
 
@@ -65,7 +65,6 @@ const EnterpriseFormContent = () => (
     <FormLayout
         title="Enterprise Governance Form"
         description="Zod schema validation · Cross-field dependency policy · Identity data handling"
-        complianceData={enterpriseCompliance}
         submitLabel="Submit Secure Record"
     >
         <GuardianFieldLayout
@@ -159,7 +158,6 @@ export const AsyncValidationDemo: Story = {
             <FormLayout
                 title="Async Username Check"
                 description="Simulates a server-side uniqueness check with a 1.5s debounce delay."
-                complianceData={asyncCompliance}
                 submitLabel="Check Availability"
             >
                 <GuardianFieldLayout

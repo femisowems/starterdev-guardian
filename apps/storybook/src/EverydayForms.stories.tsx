@@ -17,7 +17,7 @@ import { FormLayout } from './components/FormLayout';
 import { ComplianceData } from './components/ComplianceSummaryPanel';
 
 const meta: Meta = {
-    title: 'GuardianForm/EverydayForms',
+    title: 'GuardianForm/Everyday Forms',
 };
 
 export default meta;
@@ -58,7 +58,6 @@ export const ModernRegistration: Story = {
             <FormLayout
                 title="US Registration"
                 description="Standard registration form with phone masking, calendar date picker, and ZIP code formatting."
-                complianceData={usCompliance}
                 submitLabel="Sign Up"
             >
                 <GuardianFieldLayout label="Full Name" name="name" classification={DataClassification.PUBLIC}>
@@ -127,7 +126,6 @@ export const CanadianRegistration: Story = {
             <FormLayout
                 title="Canadian Registration"
                 description="Demonstrates the A1A 1A1 postal code pattern for Canadian regional addresses."
-                complianceData={caCompliance}
                 submitLabel="Create Account"
             >
                 <GuardianFieldLayout label="Full Name" name="name" classification={DataClassification.PUBLIC}>
