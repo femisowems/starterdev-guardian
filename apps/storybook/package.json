@@ -4,7 +4,8 @@
     "private": true,
     "scripts": {
         "storybook": "storybook dev -p 6006",
-        "build-storybook": "storybook build"
+        "build-storybook": "storybook build",
+        "build-all": "npm run build --prefix ../.. && npm run build-storybook && mv storybook-static ../../storybook-static"
     },
     "devDependencies": {
         "@starterdev/guardian-form": "*",
