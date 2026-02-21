@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { fn, expect, userEvent, within } from '@storybook/test';
 import {
     GuardianFormProvider,
     GuardianField,
@@ -14,27 +15,97 @@ import './tailwind.css';
 import { GuardianFieldLayout } from './components/GuardianFieldLayout';
 import { FormLayout } from './components/FormLayout';
 
-const meta: Meta<typeof GuardianFormProvider> = {
+// ─── Args Interface ───────────────────────────────────────────────────────────
+
+interface AuthFormArgs {
+    formTitle: string;
+    formDescription: string;
+    submitLabel: string;
+    userId: string;
+    userRole: 'user' | 'admin' | 'compliance-officer' | 'readonly';
+    enableNoPlaintext: boolean;
+    enableRequireEncryption: boolean;
+    onSubmit: (...args: any[]) => void;
+    onAudit: (...args: any[]) => void;
+}
+
+// ─── Meta ─────────────────────────────────────────────────────────────────────
+
+const meta: Meta<AuthFormArgs> = {
     title: 'GuardianForm/Authentication Forms',
-    component: GuardianFormProvider,
+    tags: ['autodocs'],
+    argTypes: {
+        formTitle: {
+            control: 'text',
+            description: 'Title displayed in the form header',
+            table: { category: 'Content' },
+        },
+        formDescription: {
+            control: 'text',
+            description: 'Subtitle below the title',
+            table: { category: 'Content' },
+        },
+        submitLabel: {
+            control: 'text',
+            description: 'Label for the submit button',
+            table: { category: 'Content' },
+        },
+        userId: {
+            control: 'text',
+            description: 'User ID used for the audit trail',
+            table: { category: 'Governance' },
+        },
+        userRole: {
+            control: 'select',
+            options: ['user', 'admin', 'compliance-officer', 'readonly'],
+            description: 'Role passed to the policy engine context',
+            table: { category: 'Governance', defaultValue: { summary: 'user' } },
+        },
+        enableNoPlaintext: {
+            control: 'boolean',
+            description: 'Enable NoPlaintextPiiPolicy',
+            table: { category: 'Policies' },
+        },
+        enableRequireEncryption: {
+            control: 'boolean',
+            description: 'Enable RequireEncryptionPolicy',
+            table: { category: 'Policies' },
+        },
+        onSubmit: { description: 'Fired with form values on successful submission', table: { category: 'Actions' } },
+        onAudit: { description: 'Fired on every field change with audit metadata', table: { category: 'Actions' } },
+    },
+    args: {
+        formTitle: 'Secure Portal Login',
+        formDescription: 'Standard enterprise login with PII protection on username fields.',
+        submitLabel: 'Sign In',
+        userId: 'anonymous',
+        userRole: 'user',
+        enableNoPlaintext: true,
+        enableRequireEncryption: false,
+        onSubmit: fn(),
+        onAudit: fn(),
+    },
 };
 
 export default meta;
-type Story = StoryObj<typeof GuardianFormProvider>;
+type Story = StoryObj<AuthFormArgs>;
+
+// ─── Secure Login ─────────────────────────────────────────────────────────────
 
 export const SecureLogin: Story = {
-    render: () => (
+    name: 'Secure Login',
+    render: (args) => (
         <GuardianFormProvider
             initialValues={{ username: '', password: '' }}
-            policies={[NoPlaintextPiiPolicy]}
-            userContext={{ userId: 'anonymous' }}
-            onSubmit={(v) => alert(`Authenticated as: ${v.username}`)}
+            policies={[
+                ...(args.enableNoPlaintext ? [NoPlaintextPiiPolicy] : []),
+                ...(args.enableRequireEncryption ? [RequireEncryptionPolicy] : []),
+            ]}
+            userContext={{ userId: args.userId, role: args.userRole }}
+            onAudit={args.onAudit}
+            onSubmit={args.onSubmit}
         >
-            <FormLayout
-                title="Secure Portal Login"
-                description="Standard enterprise login with PII protection on username fields."
-                submitLabel="Sign In"
-            >
+            <FormLayout title={args.formTitle} description={args.formDescription} submitLabel={args.submitLabel}>
                 <GuardianFieldLayout
                     label="Username"
                     name="username"
@@ -45,6 +116,7 @@ export const SecureLogin: Story = {
                         {({ field }) => (
                             <input
                                 {...field}
+                                id="auth-username"
                                 className="gf-input"
                                 placeholder="e.g. j.doe@company.com"
                                 autoComplete="username"
@@ -63,6 +135,7 @@ export const SecureLogin: Story = {
                         {({ field }) => (
                             <input
                                 {...field}
+                                id="auth-password"
                                 type="password"
                                 className="gf-input"
                                 placeholder="••••••••"
@@ -84,22 +157,38 @@ export const SecureLogin: Story = {
             </FormLayout>
         </GuardianFormProvider>
     ),
+    play: async ({ canvasElement }) => {
+        const canvas = within(canvasElement);
+        const usernameInput = await canvas.findByPlaceholderText('e.g. j.doe@company.com');
+        await userEvent.type(usernameInput, 'j.doe@company.com', { delay: 40 });
+        const passwordInput = canvas.getByPlaceholderText('••••••••');
+        await userEvent.type(passwordInput, 'SecureP@ss1', { delay: 40 });
+        const submitBtn = await canvas.findByRole('button', { name: /sign in/i });
+        await expect(submitBtn).toBeInTheDocument();
+    },
 };
 
+// ─── MFA Verification ─────────────────────────────────────────────────────────
+
 export const MFAVerification: Story = {
-    render: () => (
+    name: 'MFA Verification',
+    args: {
+        formTitle: 'Two-Factor Authentication',
+        formDescription: 'Enter the 6-digit verification code sent to your registered device.',
+        submitLabel: 'Verify Identity',
+        userId: 'user_123',
+        enableRequireEncryption: true,
+    },
+    render: (args) => (
         <GuardianFormProvider
             initialValues={{ code: '' }}
-            policies={[RequireEncryptionPolicy]}
-            userContext={{ userId: 'user_123' }}
-            onSubmit={(v) => alert(`Verified with code: ${v.code}`)}
+            policies={args.enableRequireEncryption ? [RequireEncryptionPolicy] : []}
+            userContext={{ userId: args.userId }}
+            onAudit={args.onAudit}
+            onSubmit={args.onSubmit}
         >
             <div className="max-w-md mx-auto">
-                <FormLayout
-                    title="Two-Factor Authentication"
-                    description="Enter the 6-digit verification code sent to your registered device."
-                    submitLabel="Verify Identity"
-                >
+                <FormLayout title={args.formTitle} description={args.formDescription} submitLabel={args.submitLabel}>
                     <div className="text-center py-4">
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-50 text-indigo-600 mb-4">
                             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -117,6 +206,7 @@ export const MFAVerification: Story = {
                             {({ field }) => (
                                 <MaskedInput
                                     {...field}
+                                    id="mfa-code"
                                     pattern="9 9 9 9 9 9"
                                     placeholder="0 0 0 0 0 0"
                                     className="text-center text-2xl tracking-[0.5em] font-mono"
@@ -132,20 +222,32 @@ export const MFAVerification: Story = {
             </div>
         </GuardianFormProvider>
     ),
+    play: async ({ canvasElement }) => {
+        const canvas = within(canvasElement);
+        const submitBtn = await canvas.findByRole('button', { name: /verify identity/i });
+        await expect(submitBtn).toBeInTheDocument();
+    },
 };
 
+// ─── Password Reset ───────────────────────────────────────────────────────────
+
 export const PasswordReset: Story = {
-    render: () => (
+    name: 'Password Reset',
+    args: {
+        formTitle: 'Reset Password',
+        formDescription: 'Enter your email to receive recovery instructions.',
+        submitLabel: 'Send Reset Link',
+        userId: 'anonymous',
+    },
+    render: (args) => (
         <GuardianFormProvider
             initialValues={{ email: '' }}
-            policies={[NoPlaintextPiiPolicy]}
-            onSubmit={(v) => alert(`Reset link sent to: ${v.email}`)}
+            policies={args.enableNoPlaintext ? [NoPlaintextPiiPolicy] : []}
+            userContext={{ userId: args.userId }}
+            onAudit={args.onAudit}
+            onSubmit={args.onSubmit}
         >
-            <FormLayout
-                title="Reset Password"
-                description="Enter your email to receive recovery instructions."
-                submitLabel="Send Reset Link"
-            >
+            <FormLayout title={args.formTitle} description={args.formDescription} submitLabel={args.submitLabel}>
                 <GuardianFieldLayout
                     label="Email Address"
                     name="email"
@@ -155,6 +257,7 @@ export const PasswordReset: Story = {
                         {({ field }) => (
                             <input
                                 {...field}
+                                id="reset-email"
                                 type="email"
                                 className="gf-input"
                                 placeholder="name@company.com"
@@ -165,15 +268,34 @@ export const PasswordReset: Story = {
             </FormLayout>
         </GuardianFormProvider>
     ),
+    play: async ({ canvasElement }) => {
+        const canvas = within(canvasElement);
+        const emailInput = await canvas.findByPlaceholderText('name@company.com');
+        await userEvent.type(emailInput, 'jane@company.com', { delay: 40 });
+        const submitBtn = await canvas.findByRole('button', { name: /send reset link/i });
+        await expect(submitBtn).toBeInTheDocument();
+    },
 };
 
+// ─── Step-Up Auth ─────────────────────────────────────────────────────────────
+
 export const StepUpAuth: Story = {
-    render: () => (
+    name: 'Step-Up Authentication (Admin)',
+    args: {
+        formTitle: '',
+        formDescription: '',
+        submitLabel: 'Authorize Action',
+        userId: 'user_123',
+        userRole: 'admin',
+        enableRequireEncryption: true,
+    },
+    render: (args) => (
         <GuardianFormProvider
             initialValues={{ pin: '' }}
-            policies={[RequireEncryptionPolicy]}
-            userContext={{ userId: 'user_123', role: 'admin' }}
-            onSubmit={() => alert('Action Authorized')}
+            policies={args.enableRequireEncryption ? [RequireEncryptionPolicy] : []}
+            userContext={{ userId: args.userId, role: args.userRole }}
+            onAudit={args.onAudit}
+            onSubmit={args.onSubmit}
         >
             <div className="max-w-md mx-auto relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-amber-600 rounded-2xl blur opacity-20" />
@@ -186,28 +308,20 @@ export const StepUpAuth: Story = {
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-red-900 uppercase tracking-tight">Step-Up Authentication</h3>
-                            <p className="text-[11px] text-red-700">High-privilege action detected (Role: ADMIN)</p>
+                            <p className="text-[11px] text-red-700">High-privilege action detected (Role: {args.userRole?.toUpperCase()})</p>
                         </div>
                     </div>
-
                     <div className="p-6">
                         <p className="text-xs text-slate-600 mb-6">
-                            To modify global security policies, please confirm your authorization با entering your security PIN.
+                            To modify global security policies, please confirm your authorization by entering your security PIN.
                         </p>
-                        <FormLayout
-                            title=""
-                            description=""
-                            submitLabel="Authorize Action"
-                        >
-                            <GuardianFieldLayout
-                                label="Security PIN"
-                                name="pin"
-                                classification={DataClassification.HIGHLY_SENSITIVE}
-                            >
+                        <FormLayout title={args.formTitle} description={args.formDescription} submitLabel={args.submitLabel}>
+                            <GuardianFieldLayout label="Security PIN" name="pin" classification={DataClassification.HIGHLY_SENSITIVE}>
                                 <GuardianField name="pin" label="PIN" classification={DataClassification.HIGHLY_SENSITIVE} masked>
                                     {({ field }) => (
                                         <MaskedInput
                                             {...field}
+                                            id="stepup-pin"
                                             pattern="9 9 9 9"
                                             placeholder="0 0 0 0"
                                             className="text-center text-xl tracking-[1em]"
@@ -221,4 +335,9 @@ export const StepUpAuth: Story = {
             </div>
         </GuardianFormProvider>
     ),
+    play: async ({ canvasElement }) => {
+        const canvas = within(canvasElement);
+        const authorizeBtn = await canvas.findByRole('button', { name: /authorize action/i });
+        await expect(authorizeBtn).toBeInTheDocument();
+    },
 };

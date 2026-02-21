@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { fn, expect, userEvent, within } from '@storybook/test';
 import {
     GuardianFormProvider,
     GuardianField,
@@ -15,56 +16,118 @@ import '../../../packages/guardian-form/src/guardian-form.css';
 import './tailwind.css';
 import { GuardianFieldLayout } from './components/GuardianFieldLayout';
 import { FormLayout } from './components/FormLayout';
-import { ComplianceData } from './components/ComplianceSummaryPanel';
 
-const meta: Meta<typeof GuardianFormProvider> = {
+// ─── Story Args Interface ─────────────────────────────────────────────────────
+
+interface SecureFormArgs {
+    formTitle: string;
+    formDescription: string;
+    submitLabel: string;
+    userId: string;
+    userRole: string;
+    enableNoPlaintext: boolean;
+    enableRequireEncryption: boolean;
+    enableMaskHighlySensitive: boolean;
+    onSubmit: (values: Record<string, string>) => void;
+    onAudit: (meta: Record<string, unknown>) => void;
+}
+
+// ─── Meta ─────────────────────────────────────────────────────────────────────
+
+const meta: Meta<SecureFormArgs> = {
     title: 'GuardianForm/Secure Forms',
-    component: GuardianFormProvider,
+    component: GuardianFormProvider as any,
+    argTypes: {
+        formTitle: {
+            control: 'text',
+            description: 'Title displayed at the top of the form',
+            table: { category: 'Content', defaultValue: { summary: 'Secure Identity Form' } },
+        },
+        formDescription: {
+            control: 'text',
+            description: 'Subtitle / description shown beneath the title',
+            table: { category: 'Content' },
+        },
+        submitLabel: {
+            control: 'text',
+            description: 'Label for the submit button',
+            table: { category: 'Content', defaultValue: { summary: 'Submit Record' } },
+        },
+        userId: {
+            control: 'text',
+            description: 'User ID for audit trail and policy enforcement',
+            table: { category: 'Governance' },
+        },
+        userRole: {
+            control: 'select',
+            options: ['user', 'admin', 'compliance-officer', 'readonly'],
+            description: 'User role passed into policy engine context',
+            table: { category: 'Governance', defaultValue: { summary: 'user' } },
+        },
+        enableNoPlaintext: {
+            control: 'boolean',
+            description: 'Enforce NoPlaintextPiiPolicy — blocks plaintext submission of PERSONAL fields',
+            table: { category: 'Policies' },
+        },
+        enableRequireEncryption: {
+            control: 'boolean',
+            description: 'Enforce RequireEncryptionPolicy — requires FINANCIAL and HIGHLY_SENSITIVE fields to declare encryptionRequired',
+            table: { category: 'Policies' },
+        },
+        enableMaskHighlySensitive: {
+            control: 'boolean',
+            description: 'Enforce MaskHighlySensitivePolicy — warns if HIGHLY_SENSITIVE fields have masking disabled',
+            table: { category: 'Policies' },
+        },
+        onSubmit: {
+            description: 'Fired with sanitised form values on a successful, policy-compliant submission',
+            table: { category: 'Actions' },
+        },
+        onAudit: {
+            description: 'Fired on every field change and form submission with the Guardian AuditMeta trail object',
+            table: { category: 'Actions' },
+        },
+    },
+    args: {
+        formTitle: 'Secure Identity Form',
+        formDescription: 'Field-level encryption and masking enforced by the Guardian Form policy engine.',
+        submitLabel: 'Submit Record',
+        userId: 'user-001',
+        userRole: 'user',
+        enableNoPlaintext: true,
+        enableRequireEncryption: false,
+        enableMaskHighlySensitive: false,
+        onSubmit: fn(),
+        onAudit: fn(),
+    },
 };
 
 export default meta;
-type Story = StoryObj<typeof GuardianFormProvider>;
+type Story = StoryObj<SecureFormArgs>;
 
-// ─── Compliance data props ────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const secureCompliance: ComplianceData = {
-    totalFields: 3,
-    piiFields: 3,
-    encryptedFields: 3,
-    violations: [],
-    retentionPolicy: '30 days',
-    auditLogging: true,
-    riskScore: 42,
-};
+function buildPolicies(args: SecureFormArgs) {
+    const policies = [];
+    if (args.enableNoPlaintext) policies.push(NoPlaintextPiiPolicy);
+    if (args.enableRequireEncryption) policies.push(RequireEncryptionPolicy);
+    if (args.enableMaskHighlySensitive) policies.push(MaskHighlySensitivePolicy);
+    return policies;
+}
 
-const highRiskCompliance: ComplianceData = {
-    totalFields: 3,
-    piiFields: 3,
-    encryptedFields: 0,
-    violations: [
-        { ruleId: 'require-encryption', message: 'Credit Card field (FINANCIAL) is missing encryption requirement.', severity: 'ERROR' },
-        { ruleId: 'mask-highly-sensitive', message: 'SSN field is classified HIGHLY_SENSITIVE but masking is disabled.', severity: 'WARN' },
-    ],
-    retentionPolicy: '365 days',
-    auditLogging: true,
-    riskScore: 91,
-};
-
-// ─── Stories ──────────────────────────────────────────────────────────────────
+// ─── Basic Secure Form ────────────────────────────────────────────────────────
 
 export const BasicSecureForm: Story = {
-    render: () => (
+    name: 'Basic Secure Form',
+    render: (args) => (
         <GuardianFormProvider
             initialValues={{ email: '', ssn: '', sin: '' }}
-            policies={[NoPlaintextPiiPolicy]}
-            userContext={{ userId: 'user-001' }}
-            onSubmit={(v) => alert(JSON.stringify(v, null, 2))}
+            policies={buildPolicies(args)}
+            userContext={{ userId: args.userId, role: args.userRole }}
+            onAudit={args.onAudit as any}
+            onSubmit={args.onSubmit as any}
         >
-            <FormLayout
-                title="Secure Identity Form"
-                description="Field-level encryption and masking enforced by the Guardian Form policy engine."
-                submitLabel="Submit Record"
-            >
+            <FormLayout title={args.formTitle} description={args.formDescription} submitLabel={args.submitLabel}>
                 <GuardianFieldLayout
                     label="Email Address"
                     name="email"
@@ -72,7 +135,7 @@ export const BasicSecureForm: Story = {
                     complianceNote="Used for system notifications only. Never shared with third parties."
                 >
                     <GuardianField name="email" label="" classification={DataClassification.PERSONAL} encryptionRequired>
-                        {({ field }) => <input {...field} className="gf-input" placeholder="email@example.com" />}
+                        {({ field }) => <input {...field} id="secure-field-email" className="gf-input" placeholder="email@example.com" />}
                     </GuardianField>
                 </GuardianFieldLayout>
 
@@ -83,7 +146,7 @@ export const BasicSecureForm: Story = {
                     complianceNote="AES-256 encrypted at rest. Never logged or cached in plaintext."
                 >
                     <GuardianField name="ssn" label="" classification={DataClassification.HIGHLY_SENSITIVE} masked>
-                        {({ field }) => <MaskedInput {...field} pattern={Patterns.SSN} placeholder="000-00-0000" />}
+                        {({ field }) => <MaskedInput {...field} id="secure-field-ssn" pattern={Patterns.SSN} placeholder="000-00-0000" />}
                     </GuardianField>
                 </GuardianFieldLayout>
 
@@ -94,32 +157,52 @@ export const BasicSecureForm: Story = {
                     complianceNote="Required for T4 reporting. Stored in compliance vault."
                 >
                     <GuardianField name="sin" label="" classification={DataClassification.HIGHLY_SENSITIVE} masked>
-                        {({ field }) => <MaskedInput {...field} pattern={Patterns.SIN} placeholder="000-000-000" />}
+                        {({ field }) => <MaskedInput {...field} id="secure-field-sin" pattern={Patterns.SIN} placeholder="000-000-000" />}
                     </GuardianField>
                 </GuardianFieldLayout>
 
-                {/* Inline risk meter below the fields */}
                 <div className="pt-2">
                     <RiskMeter />
                 </div>
             </FormLayout>
         </GuardianFormProvider>
     ),
+    play: async ({ canvasElement }) => {
+        const canvas = within(canvasElement);
+
+        // Type an email into the first field
+        const emailInput = await canvas.findByPlaceholderText('email@example.com');
+        await userEvent.type(emailInput, 'test@company.com', { delay: 40 });
+
+        // Verify submit button exists
+        const submitBtn = await canvas.findByRole('button', { name: /submit record/i });
+        await expect(submitBtn).toBeInTheDocument();
+    },
 };
 
+// ─── High Risk Form ───────────────────────────────────────────────────────────
+
 export const HighRiskForm: Story = {
-    render: () => (
+    name: 'High Risk Form (Policy Violations)',
+    args: {
+        formTitle: '⚠️ High Risk Form',
+        formDescription: 'Demonstrates policy violations: unencrypted financial data and unmasked sensitive fields.',
+        submitLabel: 'Submit (Violations Detected)',
+        userId: 'user-002',
+        userRole: 'user',
+        enableNoPlaintext: true,
+        enableRequireEncryption: true,
+        enableMaskHighlySensitive: true,
+    },
+    render: (args) => (
         <GuardianFormProvider
             initialValues={{ cc: '', ssn: '', note: '' }}
-            policies={[NoPlaintextPiiPolicy, RequireEncryptionPolicy, MaskHighlySensitivePolicy]}
-            userContext={{ userId: 'user-002' }}
-            onSubmit={(v) => alert(JSON.stringify(v, null, 2))}
+            policies={buildPolicies(args)}
+            userContext={{ userId: args.userId, role: args.userRole }}
+            onAudit={args.onAudit as any}
+            onSubmit={args.onSubmit as any}
         >
-            <FormLayout
-                title="⚠️ High Risk Form"
-                description="Demonstrates policy violations: unencrypted financial data and unmasked sensitive fields."
-                submitLabel="Submit (Violations Detected)"
-            >
+            <FormLayout title={args.formTitle} description={args.formDescription} submitLabel={args.submitLabel}>
                 <GuardianFieldLayout
                     label="Credit Card"
                     name="cc"
@@ -127,7 +210,7 @@ export const HighRiskForm: Story = {
                     complianceNote="No encryption required — triggers a policy violation."
                 >
                     <GuardianField name="cc" label="Credit Card" classification={DataClassification.FINANCIAL} encryptionRequired={false}>
-                        {({ field }) => <MaskedInput {...field} pattern={Patterns.CREDIT_CARD} placeholder="0000 0000 0000 0000" />}
+                        {({ field }) => <MaskedInput {...field} id="high-risk-cc" pattern={Patterns.CREDIT_CARD} placeholder="0000 0000 0000 0000" />}
                     </GuardianField>
                 </GuardianFieldLayout>
 
@@ -138,10 +221,9 @@ export const HighRiskForm: Story = {
                     complianceNote="Masking disabled — triggers a HIGHLY_SENSITIVE policy warning."
                 >
                     <GuardianField name="ssn" label="SSN" classification={DataClassification.HIGHLY_SENSITIVE} masked={false}>
-                        {({ field }) => <MaskedInput {...field} pattern={Patterns.SSN} placeholder="000-00-0000" />}
+                        {({ field }) => <MaskedInput {...field} id="high-risk-ssn" pattern={Patterns.SSN} placeholder="000-00-0000" />}
                     </GuardianField>
                 </GuardianFieldLayout>
-
 
                 <GuardianFieldLayout
                     label="Internal Notes"
@@ -152,6 +234,7 @@ export const HighRiskForm: Story = {
                         {({ field }) => (
                             <textarea
                                 {...field}
+                                id="high-risk-notes"
                                 className="gf-input min-h-[80px] resize-none"
                                 placeholder="Typing here will increase the risk score..."
                             />
@@ -165,4 +248,15 @@ export const HighRiskForm: Story = {
             </FormLayout>
         </GuardianFormProvider>
     ),
+    play: async ({ canvasElement }) => {
+        const canvas = within(canvasElement);
+
+        // Type in the notes field to drive risk score up
+        const notesInput = await canvas.findByPlaceholderText('Typing here will increase the risk score...');
+        await userEvent.type(notesInput, 'Accessing sensitive records for Q4 audit review.', { delay: 20 });
+
+        // Confirm the submit button text reflects the high-risk state
+        const submitBtn = await canvas.findByRole('button', { name: /violations detected/i });
+        await expect(submitBtn).toBeInTheDocument();
+    },
 };
