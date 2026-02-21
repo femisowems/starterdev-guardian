@@ -11,7 +11,20 @@ const preview: Preview = {
         },
         options: {
             storySort: {
-                order: ['GuardianForm', ['Everyday Forms', 'Secure Forms', 'Advanced Forms', 'Enterprise Forms']],
+                order: ['GuardianForm', [
+                    'Everyday Forms',
+                    'Secure Forms',
+                    'Advanced Forms',
+                    'Enterprise Forms',
+                    'Authentication Forms',
+                    'Multi-Step Forms',
+                    'Dynamic Forms',
+                    'Document Intake',
+                    'Consent & Compliance',
+                    'Accessibility',
+                    'Jurisdiction Modes',
+                    'System States'
+                ]],
             },
         },
 
