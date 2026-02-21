@@ -36,6 +36,7 @@ export function useGuardianForm<T extends Record<string, any>>({
         errors: {},
         touched: {},
         isSubmitting: false,
+        isValidating: false,
         compliance: {
             violations: [],
             isCompliant: true,
@@ -74,10 +75,12 @@ export function useGuardianForm<T extends Record<string, any>>({
      * Internal validation and compliance check.
      */
     const runValidation = useCallback(async (values: T, metadata: Record<string, FieldMetadata>) => {
+        setState((prev) => ({ ...prev, isValidating: true }));
         let errors: Record<string, string> = {};
         if (validate) {
             errors = await validate(values);
         }
+        setState((prev) => ({ ...prev, isValidating: false }));
 
         const violations = policyEngine.evaluate(values, metadata);
         const risk = calculateRiskScore(values, metadata, errors);

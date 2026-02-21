@@ -51,7 +51,7 @@ export interface RiskScore {
 export interface PolicyRule {
     id: string;
     name: string;
-    evaluate: (value: any, meta: FieldMetadata) => PolicyViolation | null;
+    evaluate: (value: any, meta: FieldMetadata, allValues: Record<string, any>) => PolicyViolation | null;
 }
 
 /**
@@ -90,6 +90,7 @@ export interface GuardianFormState<T = any> {
     errors: Record<string, string>;
     touched: Record<string, boolean>;
     isSubmitting: boolean;
+    isValidating: boolean;
     compliance: {
         violations: PolicyViolation[];
         isCompliant: boolean;

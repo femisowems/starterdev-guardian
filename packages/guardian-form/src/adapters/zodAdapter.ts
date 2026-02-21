@@ -1,12 +1,11 @@
 import { z } from 'zod';
 
 /**
- * Adapter to use Zod schemas for validation within GuardianForm.
+ * Zod adapter to convert Zod validation errors to GuardianForm error format.
  */
 export function zodAdapter<T>(schema: z.ZodSchema<T>) {
-    return async (values: T): Promise<Record<string, string>> => {
-        const result = await schema.safeParseAsync(values);
-
+    return (values: Record<string, any>) => {
+        const result = schema.safeParse(values);
         if (result.success) {
             return {};
         }
@@ -14,7 +13,9 @@ export function zodAdapter<T>(schema: z.ZodSchema<T>) {
         const errors: Record<string, string> = {};
         result.error.issues.forEach((issue) => {
             const path = issue.path.join('.');
-            errors[path] = issue.message;
+            if (path && !errors[path]) {
+                errors[path] = issue.message;
+            }
         });
 
         return errors;

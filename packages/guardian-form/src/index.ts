@@ -11,4 +11,5 @@ export * from './components/ComplianceSummary';
 export * from './components/PiiBadge';
 export * from './components/MaskedInput';
 
-export * from './adapters/zodAdapter';
+export * from './adapters';
+export * from './hooks';

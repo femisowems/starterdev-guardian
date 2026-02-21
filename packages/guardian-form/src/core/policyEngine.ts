@@ -6,7 +6,7 @@ import { DataClassification, FieldMetadata, PolicyRule, PolicyViolation } from '
 export const NoPlaintextPiiPolicy: PolicyRule = {
     id: 'no-plaintext-pii',
     name: 'No Plaintext PII',
-    evaluate: (value, meta) => {
+    evaluate: (value, meta, _allValues) => {
         const isPiiValue = meta.classification !== DataClassification.PUBLIC && meta.classification !== DataClassification.INTERNAL;
         if (isPiiValue && !meta.encryptionRequired && value) {
             return {
@@ -25,7 +25,7 @@ export const NoPlaintextPiiPolicy: PolicyRule = {
 export const RequireEncryptionPolicy: PolicyRule = {
     id: 'require-encryption',
     name: 'Require Encryption',
-    evaluate: (_, meta) => {
+    evaluate: (_, meta, _allValues) => {
         const needsEncryption =
             meta.classification === DataClassification.FINANCIAL ||
             meta.classification === DataClassification.HIGHLY_SENSITIVE;
@@ -47,7 +47,7 @@ export const RequireEncryptionPolicy: PolicyRule = {
 export const MaskHighlySensitivePolicy: PolicyRule = {
     id: 'mask-highly-sensitive',
     name: 'Mask Highly Sensitive',
-    evaluate: (_, meta) => {
+    evaluate: (_, meta, _allValues) => {
         if (meta.classification === DataClassification.HIGHLY_SENSITIVE && !meta.masked) {
             return {
                 ruleId: 'mask-highly-sensitive',
@@ -58,6 +58,31 @@ export const MaskHighlySensitivePolicy: PolicyRule = {
         return null;
     },
 };
+
+/**
+ * Built-in policy: Requires a secondary field to be present if the target field meets a certain condition.
+ */
+export const DependentFieldPolicy = (
+    targetField: string,
+    condition: (value: any) => boolean,
+    dependentField: string,
+    message: string
+): PolicyRule => ({
+    id: `dependent-${targetField}-${dependentField}`,
+    name: 'Dependent Field Policy',
+    evaluate: (value, meta, allValues) => {
+        if (meta.name === targetField && condition(value)) {
+            if (!allValues[dependentField]) {
+                return {
+                    ruleId: `dependent-${targetField}-${dependentField}`,
+                    message,
+                    severity: 'BLOCK',
+                };
+            }
+        }
+        return null;
+    },
+});
 
 /**
  * Policy Engine to evaluate rules against form data.
@@ -80,7 +105,7 @@ export class PolicyEngine {
             if (!meta) continue;
 
             for (const rule of this.rules) {
-                const violation = rule.evaluate(value, meta);
+                const violation = rule.evaluate(value, meta, values);
                 if (violation) {
                     violations.push(violation);
                 }

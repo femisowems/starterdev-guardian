@@ -5,6 +5,9 @@
         "paths": {
             "@starterdev/guardian-form": [
                 "../../packages/guardian-form/src/index.ts"
+            ],
+            "@starterdev/guardian-form/adapters": [
+                "../../packages/guardian-form/src/adapters/index.ts"
             ]
         }
     },
