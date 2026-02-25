@@ -11,7 +11,7 @@
     "scripts": {
         "build": "npm run build --workspace=@starterdev/guardian-form",
         "build-all": "npm run build --workspace=@starterdev/guardian-form && rm -rf storybook-static && npm run build-storybook --workspace=storybook-app -- -o ../../storybook-static",
-        "test": "npm run test --workspace=@starterdev/guardian-form",
+        "test": "npm run test --workspaces --if-present",
         "lint": "npm run lint --workspace=@starterdev/guardian-form",
         "storybook": "npm run storybook --workspace=storybook-app"
     }

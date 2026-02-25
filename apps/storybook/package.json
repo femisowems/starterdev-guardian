@@ -6,7 +6,8 @@
     "scripts": {
         "storybook": "storybook dev -p 6006",
         "build-storybook": "storybook build",
-        "build-all": "npm run build --prefix ../.. && rm -rf ../../storybook-static && npm run build-storybook -- -o ../../storybook-static"
+        "build-all": "npm run build --prefix ../.. && rm -rf ../../storybook-static && npm run build-storybook -- -o ../../storybook-static",
+        "test": "vitest run"
     },
     "devDependencies": {
         "@starterdev/guardian-form": "*",
@@ -16,15 +17,20 @@
         "@storybook/blocks": "^8.0.0",
         "@storybook/react": "^8.0.0",
         "@storybook/react-vite": "^8.0.0",
+        "@testing-library/jest-dom": "^6.9.1",
+        "@testing-library/react": "^16.3.2",
         "@types/react": "^19.2.14",
         "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.4",
         "autoprefixer": "^10.4.24",
+        "jsdom": "^28.1.0",
         "postcss": "^8.5.6",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "storybook": "^8.0.0",
         "tailwindcss": "^3.4.19",
         "vite": "^5.0.0",
+        "vitest": "^4.0.18",
         "zod": "^3.23.0"
     }
 }
